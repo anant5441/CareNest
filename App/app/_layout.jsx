@@ -42,8 +42,8 @@ const RootLayout = () => {
                         name="(Home)/index"
                         options={{
                             title: "Home",
-                            tabBarIcon: ({ color, size }) => (
-                                <Ionicons name="home" size={size} color={color} />
+                            tabBarIcon: ({ color, size ,focused}) => (
+                                <Ionicons name={focused?"home":"home-outline"} size={size} color={color} />
                             ),
                         }}
                     />
@@ -51,8 +51,8 @@ const RootLayout = () => {
                         name="(Nutrition)/Nutrition"
                         options={{
                             title: "Nutrition",
-                            tabBarIcon: ({ color, size }) => (
-                                <Ionicons name="restaurant" size={size} color={color} />
+                            tabBarIcon: ({ color, size  , focused}) => (
+                                <Ionicons name={focused?"restaurant":"restaurant-outline"} size={size} color={color} />
                             ),
                         }}
                     />
@@ -60,8 +60,8 @@ const RootLayout = () => {
                         name="(NewBorn)/NewBorn"
                         options={{
                             title: "Newborn",
-                            tabBarIcon: ({ color, size }) => (
-                                <Ionicons name="accessibility" size={size} color={color} />
+                            tabBarIcon: ({ color, size,focused }) => (
+                                <Ionicons name={focused?"accessibility":"accessibility-outline"} size={size} color={color} />
                             ),
                         }}
                     />
@@ -69,8 +69,8 @@ const RootLayout = () => {
                         name="(Women)/Women"
                         options={{
                             title: "Women",
-                            tabBarIcon: ({ color, size }) => (
-                                <Ionicons name="female" size={size} color={color} />
+                            tabBarIcon: ({ color, size,focused }) => (
+                                <Ionicons name={focused?"female":"female-outline"} size={size} color={color} />
                             ),
                         }}
                     />
