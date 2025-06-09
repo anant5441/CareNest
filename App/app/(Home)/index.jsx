@@ -262,9 +262,6 @@ function getGreetingIconName() {
 function getUserName() {
     return "John";
 }
-function HandleUserIcon() {
-    console.log("handleUserIcon");
-}
 function handleTalkWithAI() {
     console.log("handleTalkWithAI");
 }
