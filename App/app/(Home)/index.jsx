@@ -1,5 +1,5 @@
 //React modules
-import {Text, StyleSheet, TouchableOpacity} from 'react-native'
+import {Text, StyleSheet, TouchableOpacity, View} from 'react-native'
 import {Ionicons} from "@expo/vector-icons";
 //Custom Components
 import CView from '../../Components/CView'
@@ -15,29 +15,86 @@ const App = () => {
 
                     <CView style={styles.GreetingBarContainer} >
                         <CView style={styles.GreetingBar}>
-                            <Ionicons name={getGreetingIconName()} size={24} color={Colors.greetIconColor} />
-                            <Text>{getGreeting()}</Text>
+                            <Ionicons name={getGreetingIconName()} size={20} color={Colors.greetIconColor} />
+                            <Text style={styles.greetingText}>{getGreeting()}</Text>
                         </CView>
                     </CView>
 
                     <CView style={styles.UpperTextContainer} >
-                        <Text style={styles.UpperTextTitle}>Hello John</Text>
-                        <Text style={styles.UpperTextSubheading}>Make Your day with us</Text>
+                        <Text style={styles.UpperTextTitle}>Hello {getUserName()}</Text>
+                        <Text style={styles.UpperTextSubheading}>Make your day with us</Text>
                     </CView>
 
                     <CView style={styles.MainOptionContainer} >
                         <TouchableOpacity
                             style={styles.TalkOptionContainer}
-                            onPress={() => {console.log("Talk with AI ")}}
+                            onPress={handleTalkWithAI}
                             activeOpacity={0.7}
                         >
-                            <Text>Talk with AI</Text>
+                            <Ionicons name="mic-outline" size={40} color="#666" />
+                            <Text style={styles.talkWithAITitle}>Talk with AI</Text>
+                            <Text style={styles.talkWithAISubtitle}>Let's try it now</Text>
                         </TouchableOpacity>
-                        <CView style={styles.MultipleOptionContainer}></CView>
+
+                        <CView style={styles.MultipleOptionContainer}>
+                            <TouchableOpacity
+                                style={styles.newChatOption}
+                                onPress={handleNewChat}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="chatbubble-outline" size={24} color="#666" />
+                                <Text style={styles.optionText}>New Chat</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.trackPoshanOption}
+                                onPress={handleTrackPotion}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="analytics-outline" size={24} color="#fff" />
+                                <Text style={styles.trackPoshanText}>Track Poshan</Text>
+                            </TouchableOpacity>
+                        </CView>
                     </CView>
 
                     <CView style={styles.ExploreOptionContainer} >
-                        <Text>Explore</Text>
+                        <Text style={styles.exploreTitle}>Explore more</Text>
+
+                        <TouchableOpacity
+                            style={[{ backgroundColor: Colors.exploreOptionPrimary }, styles.exploreItem]}
+                            activeOpacity={0.7}
+                            onPress={handleMalnourishedCare}
+                        >
+                            <CView style={styles.exploreItemContent}>
+                                <Ionicons name="heart-outline" size={20} color="#666" />
+                                <Text style={styles.exploreItemText}>Malnourished Care</Text>
+                            </CView>
+                            <Ionicons name="chevron-forward-outline" size={20} color="#666" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[{ backgroundColor: Colors.exploreOptionSecondary }, styles.exploreItem]}
+                            activeOpacity={0.7}
+                            onPress={handlePregNutrition}
+                        >
+                        <CView style={styles.exploreItemContent}>
+                                <Ionicons name="nutrition-outline" size={20} color="#666" />
+                                <Text style={styles.exploreItemText}>Pregnancy Nutrition</Text>
+                            </CView>
+                            <Ionicons name="chevron-forward-outline" size={20} color="#666" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[{ backgroundColor: Colors.exploreOptionPrimary }, styles.exploreItem]}
+                            activeOpacity={0.7}
+                            onPress={handleWorker}
+                        >
+                            <CView style={styles.exploreItemContent}>
+                                <Ionicons name="medical-outline" size={20} color="#666" />
+                                <Text style={styles.exploreItemText}>Health Worker</Text>
+                            </CView>
+                            <Ionicons name="chevron-forward-outline" size={20} color="#666" />
+                        </TouchableOpacity>
                     </CView>
                 </CView>
             </Background>
@@ -51,61 +108,142 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        gap: '5%',
-        justifyContent: 'space-between',
-        paddingBottom: '20%'
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        gap: 20,
     },
 
-
+    // Greeting Bar Styles
     GreetingBarContainer: {
-        justifyContent: 'center',
         alignItems: 'center',
-        paddingTop: 0,
+        marginTop: 10,
     },
     GreetingBar: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        textAlign: 'center',
-        fontSize: 13,
-        gap: '2%',
         backgroundColor: Colors.greetingBarBackground,
-        height: "25%",
-        width: 'auto',
-        paddingHorizontal: 20,
-        borderRadius: 25,
+        paddingHorizontal: 15,
+        paddingVertical: 8,
+        borderRadius: 20,
+        gap: 8,
+    },
+    greetingText: {
+        fontSize: 14,
+        color: '#333',
     },
 
-
+    // Upper Text Styles
     UpperTextContainer: {
-        paddingLeft: '5%'
+        marginVertical: 10,
     },
     UpperTextTitle: {
-        fontSize: 27,
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 5,
     },
     UpperTextSubheading: {
-        fontSize: 13,
+        fontSize: 16,
+        color: '#666',
     },
 
 
     MainOptionContainer: {
         flexDirection: 'row',
-        gap: '5%',
-        height: '30vh'
+        gap: '2%',
+        height: 200,
+        justifyContent: 'space-between',
+        paddingHorizontal: '5%'
     },
     TalkOptionContainer: {
-        height: '100%',
+        flex: 0.45,
         backgroundColor: Colors.talkOption,
+        borderRadius: 15,
+        padding: 20,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
     },
+    talkWithAITitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginTop: 10,
+        marginBottom: 5,
+    },
+    talkWithAISubtitle: {
+        fontSize: 14,
+        color: '#666',
+    },
+
     MultipleOptionContainer: {
-        height: 50,
-        backgroundColor: Colors.talkOption,
+        flex: 0.45,
+        gap: 10,
+    },
+    newChatOption: {
+        flex: 1,
+        backgroundColor: Colors.newChatOption,
+        borderRadius: 15,
+        padding: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    trackPoshanOption: {
+        flex: 1,
+        backgroundColor: Colors.trackPotion,
+        borderRadius: 15,
+        padding: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    optionText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333',
+        marginTop: 8,
+        textAlign: 'center',
+    },
+    trackPoshanText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#fff',
+        marginTop: 8,
+        textAlign: 'center',
     },
 
-
+    // Explore Section
     ExploreOptionContainer: {
+        flex: 1,
+        gap: 15,
+    },
+    exploreTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 10,
+    },
+    exploreItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+        borderRadius: 25,
+        marginBottom: 10,
+        boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+    },
+    exploreItemContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 15,
+    },
+    exploreItemText: {
+        fontSize: 16,
+        color: '#333',
+        fontWeight: '500',
     },
 })
+
 export default App;
 
 function getGreeting() {
@@ -117,8 +255,31 @@ function getGreeting() {
 
 function getGreetingIconName() {
     const hour = new Date().getHours();
-    if (hour < 12) return 'alarm-outline';  //morning
+    if (hour < 12) return 'sunny-outline';  //morning
     if (hour < 18) return 'sunny-outline';  // day
     return 'moon-outline';   // night
-
+}
+function getUserName() {
+    return "John";
+}
+function HandleUserIcon() {
+    console.log("handleUserIcon");
+}
+function handleTalkWithAI() {
+    console.log("handleTalkWithAI");
+}
+function handleNewChat() {
+    console.log("handleNewChat");
+}
+function handleTrackPotion() {
+    console.log("handleTrackPotion");
+}
+function handleMalnourishedCare(){
+    console.log("handleMalnourishedCare");
+}
+function handlePregNutrition() {
+    console.log("pregNutrition");
+}
+function handleWorker() {
+    console.log("handleWorker");
 }

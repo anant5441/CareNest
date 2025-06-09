@@ -11,7 +11,9 @@ const Colors = {
     greetIconColor: '#000000',
     talkOption: '#D8D1FF',
     newChatOption: '#FFEBBA',
-    trackPotion: '#242529'
+    trackPotion: '#242529',
+    exploreOptionPrimary: '#FFEBBA',
+    exploreOptionSecondary: '#D1D1F7',
 }
 
 export default Colors;
