@@ -86,9 +86,9 @@ const styles = StyleSheet.create({
     },
     navBar: {
         position: 'absolute',
-        height: 40,
+        height: '5%',
         width: '60%',
-        bottom: 30,
+        bottom: 15,
         marginLeft: '20%',
         paddingBottom: 2,
         borderRadius: 25,
