@@ -21,6 +21,12 @@ const Colors = {
     featuredText:'#549F93',
     menuItemBackgroundPrimary: 'rgba(84,159,147,0.5)',
     menuItemBackgroundSecondary: 'rgba(165,148,249,0.5)',
+
+    //Nutrition
+    dashBoardBackgroundPrimary: '#5B2A8687',
+    percentageCarbs: '#77E1F4',
+    percentageProtein: '#D1570E',
+    percentageFat: '#53F7A2',
 }
 
 export default Colors;

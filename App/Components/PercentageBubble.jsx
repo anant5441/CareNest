@@ -16,50 +16,52 @@ const CircularProgress = ({
 
     const angle = (normalizedValue / 100) * 360;
     const radians = (angle - 90) * (Math.PI / 180);
-
     const endX = centerX + radius * Math.cos(radians);
     const endY = centerY + radius * Math.sin(radians);
-
-
     const largeArcFlag = angle > 180 ? 1 : 0;
 
     const pathData = angle === 0 ? '' :
         `M ${centerX} ${centerY} 
-     L ${centerX} ${centerY - radius} 
-     A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY} 
-     Z`;
+         L ${centerX} ${centerY - radius} 
+         A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY} 
+         Z`;
 
     return (
-        <View style={[styles.container, { width: size, height: size }]}>
-            <Svg width={size} height={size} style={styles.svg}>
-                <Circle
-                    cx={centerX}
-                    cy={centerY}
-                    r={radius}
-                    fill={backgroundColor}
-                />
-                {normalizedValue > 0 && (
-                    <Path
-                        d={pathData}
-                        fill={color}
+        <View style={styles.wrapper}>
+            <View style={[styles.container, { width: size, height: size }]}>
+                <Svg width={size} height={size} style={styles.svg}>
+                    <Circle
+                        cx={centerX}
+                        cy={centerY}
+                        r={radius}
+                        fill={backgroundColor}
                     />
-                )}
-            </Svg>
-            <View style={styles.centerContent}>
-                <Text style={styles.valueText}>
-                    {normalizedValue}%
-                </Text>
-                {title && (
-                    <Text style={styles.titleText}>
-                        {title}
+                    {normalizedValue > 0 && (
+                        <Path
+                            d={pathData}
+                            fill={color}
+                        />
+                    )}
+                </Svg>
+                <View style={styles.centerContent}>
+                    <Text style={styles.valueText}>
+                        {normalizedValue}%
                     </Text>
-                )}
+                </View>
             </View>
+            {title ? (
+                <Text style={styles.titleText}>
+                    {title}
+                </Text>
+            ) : null}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
+    wrapper: {
+        alignItems: 'center',
+    },
     container: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -83,7 +85,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#FFF',
         textAlign: 'center',
-        marginTop: 4,
+        marginTop: 8,
         fontWeight: '600',
     },
 });
