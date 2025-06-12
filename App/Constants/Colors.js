@@ -27,10 +27,13 @@ const Colors = {
     percentageCarbs: '#77E1F4',
     percentageProtein: '#D1570E',
     percentageFat: '#53F7A2',
-    menuitemBackgroundPrimary: '#8afff1',
-    menuitemBackgroundSecondary: 'rgba(138,255,193,0.5)',
-    menuItemBackgroundTertiary: 'rgba(143,220,151,0.5)',
-    menuitemBackgroundQuad: 'rgba(247,175,157,0.6)',
+    dateNavContainer: 'rgba(255,255,255,0.5)',
+    menuitemNutritionBackgroundPrimary: 'rgba(138,255,193,0.3)',
+    menuitemNutritionBackgroundSecondary: 'rgba(138,255,193,0.3)',
+    menuItemNutritionBackgroundTertiary: 'rgba(143,220,151,0.3)',
+    menuitemNutritionBackgroundQuad: '#F7AF9D4D',
+    menuitemNutritionBackgroundEdit: '#D1D1F7',
+    mealContainerBackground: 'rgba(255,255,255,0.5)',
 }
 
 export default Colors;

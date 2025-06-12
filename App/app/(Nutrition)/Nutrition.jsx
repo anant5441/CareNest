@@ -8,6 +8,7 @@ import Background from '../../Components/BackgoundWrapper'
 import PercentageBubble from "../../Components/PercentageBubble";
 import Pentagon from "../../Components/Pentagon";
 import MenuItemComponent from "../../Components/MenuItem";
+import Loading from "../../Components/Loading";
 //Constants
 import Colors from "../../Constants/Colors";
 
@@ -93,7 +94,7 @@ const App = () => {
             icon: require('../../assets/Nutrition/Add meal.jpeg'),
             iconType: 'image',
             showArrow: false,
-            backgroundColor: Colors.menuItemBackgroundPrimary,
+            backgroundColor: Colors.menuitemNutritionBackgroundPrimary,
 
         },
         {
@@ -102,7 +103,7 @@ const App = () => {
             subtitle: 'Get AI-Powered Food Suggestions',
             icon: require('../../assets/Nutrition/AI guide.jpeg'),
             iconType: 'image',
-            backgroundColor: Colors.menuItemBackgroundSecondary,
+            backgroundColor: Colors.menuitemNutritionBackgroundSecondary,
         },
         {
             id: 3,
@@ -110,7 +111,7 @@ const App = () => {
             subtitle: 'Instant Macro Insights',
             icon: require('../../assets/Nutrition/AI guide.jpeg'),
             iconType: 'image',
-            backgroundColor: Colors.menuItemBackgroundTertiary,
+            backgroundColor: Colors.menuItemNutritionBackgroundTertiary,
         },
         {
             id: 4,
@@ -118,7 +119,7 @@ const App = () => {
             subtitle: 'Your Food Diary, Simplified',
             icon: require('../../assets/Nutrition/Recap.jpeg'),
             iconType: 'image',
-            backgroundColor: Colors.menuItemBackgroundQuad,
+            backgroundColor: Colors.menuitemNutritionBackgroundQuad,
         }
     ];
 
@@ -129,7 +130,7 @@ const App = () => {
             subtitle: 'Modify your meal entries',
             icon: 'edit',
             iconType: 'material',
-            backgroundColor: Colors.menuItemBackgroundPrimary,
+            backgroundColor: Colors.menuitemNutritionBackgroundEdit,
         }
     ];
 
@@ -170,7 +171,7 @@ const App = () => {
                 <CView style={styles.mealTimelineContainer}>
                     <Text style={styles.timelineTitle}>Daily Meals</Text>
                     <CView style={styles.loadingContainer}>
-                        <Text style={styles.loadingText}>Loading meals...</Text>
+                        <Loading />
                     </CView>
                 </CView>
             );
@@ -189,11 +190,10 @@ const App = () => {
                                 </CView>
                                 <CView style={styles.mealDetailsContainer}>
                                     <Text style={styles.mealName}>{meal.name}</Text>
-                                    <Text style={styles.mealCalories}>{meal.calories} cal</Text>
                                     <CView style={styles.macrosContainer}>
-                                        <Text style={styles.macroText}>C: {meal.carbs}g</Text>
-                                        <Text style={styles.macroText}>P: {meal.protein}g</Text>
-                                        <Text style={styles.macroText}>F: {meal.fat}g</Text>
+                                        <Text style={styles.macroText}>C: {meal.carbs}%</Text>
+                                        <Text style={styles.macroText}>P: {meal.protein}%</Text>
+                                        <Text style={styles.macroText}>F: {meal.fat}%</Text>
                                     </CView>
                                 </CView>
                                 <TouchableOpacity style={styles.editMealButton}>
@@ -220,7 +220,7 @@ const App = () => {
                 <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                     <CView style={styles.container}>
                         <CView style={styles.dashBoard}>
-                            <Pentagon width={width * 0.8} height={height * 0.4} color={Colors.dashBoardBackgroundPrimary}>
+                            <Pentagon width={width * 0.9} height={height * 0.35} color={Colors.dashBoardBackgroundPrimary}>
                                 <CView style={styles.pentagonContent}>
                                     <Text style={styles.title}>Weekly Report</Text>
                                     <CView style={styles.percentageBubbleContainer}>
@@ -372,18 +372,18 @@ const styles = StyleSheet.create({
     },
     dateNavButton: {
         padding: 8,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backgroundColor: Colors.dateNavContainer,
         borderRadius: 20,
         marginHorizontal: 15,
     },
     dateNavButtonDisabled: {
-        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+        backgroundColor: 'transparent',
         opacity: 0.5,
     },
     dateContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: Colors.dateNavContainer,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     mealsContainer: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: Colors.mealContainerBackground,
         borderRadius: 16,
         padding: 16,
     },
@@ -520,48 +520,43 @@ async function getDailyMeals(date) {
     return new Promise((resolve) => {
         setTimeout(() => {
             console.log("Daily meals data fetched for:", date.toDateString());
-
-            // Generate dummy meals for the selected date
             const dummyMeals = [
                 {
                     time: "07:30:00",
                     type: "breakfast",
-                    name: "Oatmeal with Berries",
-                    calories: 350,
-                    carbs: 45,
-                    protein: 12,
-                    fat: 8
+                    name: "Poha with Peanuts and Vegetables",
+                    carbs: 50,
+                    protein: 9,
+                    fat: 10
                 },
                 {
                     time: "12:15:00",
                     type: "lunch",
-                    name: "Grilled Chicken Salad",
-                    calories: 420,
-                    carbs: 15,
-                    protein: 35,
-                    fat: 18
+                    name: "Bajra Roti with Mixed Sabzi and Curd",
+                    carbs: 40,
+                    protein: 20,
+                    fat: 15
                 },
                 {
                     time: "15:30:00",
                     type: "snack",
-                    name: "Greek Yogurt",
-                    calories: 150,
-                    carbs: 12,
-                    protein: 15,
-                    fat: 5
+                    name: "Roasted Chana and Jaggery",
+                    carbs: 18,
+                    protein: 10,
+                    fat: 4
                 },
                 {
-                    time: "19:00:00",
+                    time: "20:30:00",
                     type: "dinner",
-                    name: "Salmon with Quinoa",
-                    calories: 580,
-                    carbs: 42,
-                    protein: 38,
-                    fat: 22
+                    name: "Khichdi with Ghee and Pickle",
+                    carbs: 50,
+                    protein: 18,
+                    fat: 20
                 }
-            ];
+            ]
+
 
             resolve(dummyMeals);
-        }, 1500);
+        }, 5000);
     });
 }
