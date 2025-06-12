@@ -27,6 +27,10 @@ const Colors = {
     percentageCarbs: '#77E1F4',
     percentageProtein: '#D1570E',
     percentageFat: '#53F7A2',
+    menuitemBackgroundPrimary: '#8afff1',
+    menuitemBackgroundSecondary: 'rgba(138,255,193,0.5)',
+    menuItemBackgroundTertiary: 'rgba(143,220,151,0.5)',
+    menuitemBackgroundQuad: 'rgba(247,175,157,0.6)',
 }
 
 export default Colors;
