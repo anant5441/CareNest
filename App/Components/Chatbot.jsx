@@ -74,11 +74,11 @@ function Chatbot({ handleQuery: handleQueryProp }) {
                 // Fallback mock responses (for development/testing)
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 const responses = [
-                    "That's a great question! Based on nutritional guidelines, I'd recommend including more protein-rich foods like lentils, eggs, and dairy products in your child's diet.",
-                    "For a 2-year-old, try offering small, frequent meals with soft textures. Mashed fruits, well-cooked vegetables, and porridge are excellent choices.",
-                    "Nutrition is key for growing children. Make sure to include foods from all food groups - grains, proteins, fruits, vegetables, and dairy.",
-                    "I understand your concern. It's common for toddlers to be picky eaters. Try making meals colorful and fun, and offer variety without forcing them to eat.",
-                    "Here are some quick meal ideas: banana pancakes for breakfast, vegetable khichdi for lunch, and fruit smoothies for snacks. Would you like specific recipes?"
+                    "Oops, the nutrition gnomes are on strike. Try again later.",
+                    "Error 404: Toddler food wisdom not found. Brb, consulting the grandma server.",
+                    "Beep boop. System overloaded from too many mashed banana queries.",
+                    "Fetching response... nope. Server saw broccoli and quit.",
+                    "Alert: AI went to get snacks. Please hold while we crunch... literally."
                 ];
                 response = responses[Math.floor(Math.random() * responses.length)];
             }

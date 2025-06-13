@@ -1,4 +1,3 @@
-# backend/routes/medical_routes.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import os
@@ -72,7 +71,7 @@ def load_llm(huggingface_repo_id):
     return HuggingFaceEndpoint(
         repo_id=huggingface_repo_id,
         temperature=0.5,
-        huggingfacehub_api_token="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",
+        huggingfacehub_api_token="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",
         max_new_tokens=512,
     )
 
@@ -132,14 +131,9 @@ def extract_medical_terms(text):
     """Main function to extract medical terms using available methods"""
     medical_terms = []
 
-    # Try transformers first (most accurate)
-    if USE_TRANSFORMERS_NER:
-        terms = extract_medical_terms_transformers(text)
-        medical_terms.extend(terms)
+    terms = extract_medical_terms_transformers(text)
+    medical_terms.extend(terms)
 
-    # Fallback to regex method
-    regex_terms = extract_medical_terms_regex(text)
-    medical_terms.extend(regex_terms)
 
     # Remove duplicates and filter short terms
     return list(set([term for term in medical_terms if len(term) > 2]))
