@@ -1,6 +1,6 @@
 import {Text, StyleSheet} from 'react-native'
-import CView from '../../Components/CView'
-import Background from '../../Components/BackgoundWrapper'
+import CView from '../../../Components/CView'
+import Background from '../../../Components/BackgoundWrapper'
 const App = () => {
     return (
         <CView style={styles.wrapper} safe={true}>

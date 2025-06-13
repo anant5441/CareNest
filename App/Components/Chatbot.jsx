@@ -5,14 +5,16 @@ import {
     TextInput,
     TouchableOpacity,
     ScrollView,
+    View,
     Animated,
     KeyboardAvoidingView,
     Platform
 } from "react-native";
 import CView from "./CView";
 import Background from "./BackgoundWrapper";
+import Colors from "../Constants/Colors";
 
-function Chatbot() {
+function Chatbot({ handleQuery: handleQueryProp }) {
     const [messages, setMessages] = useState([
         {
             id: 1,
@@ -63,9 +65,14 @@ function Chatbot() {
         setInputText('');
         setIsTyping(true);
 
-        // Simulate server delay
-        return new Promise((resolve) => {
-            setTimeout(() => {
+        try {
+            // Use the prop function if provided, otherwise fallback to mock responses
+            let response;
+            if (handleQueryProp) {
+                response = await handleQueryProp(query);
+            } else {
+                // Fallback mock responses (for development/testing)
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 const responses = [
                     "That's a great question! Based on nutritional guidelines, I'd recommend including more protein-rich foods like lentils, eggs, and dairy products in your child's diet.",
                     "For a 2-year-old, try offering small, frequent meals with soft textures. Mashed fruits, well-cooked vegetables, and porridge are excellent choices.",
@@ -73,21 +80,29 @@ function Chatbot() {
                     "I understand your concern. It's common for toddlers to be picky eaters. Try making meals colorful and fun, and offer variety without forcing them to eat.",
                     "Here are some quick meal ideas: banana pancakes for breakfast, vegetable khichdi for lunch, and fruit smoothies for snacks. Would you like specific recipes?"
                 ];
+                response = responses[Math.floor(Math.random() * responses.length)];
+            }
 
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            const botMessage = {
+                id: Date.now() + 1,
+                text: response,
+                isBot: true,
+                timestamp: new Date()
+            };
 
-                const botMessage = {
-                    id: Date.now() + 1,
-                    text: randomResponse,
-                    isBot: true,
-                    timestamp: new Date()
-                };
-
-                setMessages(prev => [...prev, botMessage]);
-                setIsTyping(false);
-                resolve(randomResponse);
-            }, 5000);
-        });
+            setMessages(prev => [...prev, botMessage]);
+        } catch (error) {
+            console.error('Error getting response:', error);
+            const errorMessage = {
+                id: Date.now() + 1,
+                text: "Sorry, I'm having trouble responding right now. Please try again later.",
+                isBot: true,
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
+            setIsTyping(false);
+        }
     };
 
     const sendMessage = () => {
@@ -152,19 +167,6 @@ function Chatbot() {
                     style={styles.container}
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 >
-                    {/* Header */}
-                    <CView style={styles.header}>
-                        <CView style={styles.headerContent}>
-                            <CView style={styles.botAvatar}>
-                                <Text style={styles.avatarText}>🤖</Text>
-                            </CView>
-                            <CView style={styles.headerInfo}>
-                                <Text style={styles.headerTitle}>PoshanAI 1.1</Text>
-                                <Text style={styles.headerSubtitle}>Your nutrition assistant</Text>
-                            </CView>
-                        </CView>
-                    </CView>
-
                     {/* Messages */}
                     <ScrollView
                         ref={scrollViewRef}
@@ -204,7 +206,6 @@ function Chatbot() {
         </CView>
     );
 }
-
 const styles = StyleSheet.create({
     wrapper: {
         flex: 1,
@@ -212,40 +213,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 16,
-    },
-    header: {
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    headerContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    botAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    avatarText: {
-        fontSize: 20,
-    },
-    headerInfo: {
-        flex: 1,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#fff',
-    },
-    headerSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.8)',
-        marginTop: 2,
+        paddingTop: '10%',
     },
     messagesContainer: {
         flex: 1,
@@ -270,11 +238,11 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     botBubble: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: Colors.BotTextContainer,
         borderBottomLeftRadius: 8,
     },
     userBubble: {
-        backgroundColor: '#8B5CF6',
+        backgroundColor: Colors.UserTextContainer,
         borderBottomRightRadius: 8,
     },
     messageText: {
@@ -285,7 +253,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     userText: {
-        color: '#fff',
+        color: '#333',
     },
     typingBubble: {
         minHeight: 48,
@@ -313,7 +281,7 @@ const styles = StyleSheet.create({
         alignItems: 'flex-end',
         paddingVertical: 16,
         paddingHorizontal: 4,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
         borderRadius: 24,
         marginBottom: 16,
     },
@@ -323,7 +291,7 @@ const styles = StyleSheet.create({
         maxHeight: 120,
         paddingHorizontal: 16,
         paddingVertical: 12,
-        color: '#fff',
+        color: '#000000',
         fontSize: 16,
         backgroundColor: 'transparent',
     },

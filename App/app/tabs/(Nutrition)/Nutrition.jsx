@@ -3,14 +3,14 @@ import {Text, StyleSheet, Dimensions, Platform, TouchableOpacity, ScrollView} fr
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useState, useEffect} from "react";
 //custom components
-import CView from '../../Components/CView'
-import Background from '../../Components/BackgoundWrapper'
-import PercentageBubble from "../../Components/PercentageBubble";
-import Pentagon from "../../Components/Pentagon";
-import MenuItemComponent from "../../Components/MenuItem";
-import Loading from "../../Components/Loading";
+import CView from '../../../Components/CView'
+import Background from '../../../Components/BackgoundWrapper'
+import PercentageBubble from "../../../Components/PercentageBubble";
+import Pentagon from "../../../Components/Pentagon";
+import MenuItemComponent from "../../../Components/MenuItem";
+import Loading from "../../../Components/Loading";
 //Constants
-import Colors from "../../Constants/Colors";
+import Colors from "../../../Constants/Colors";
 
 const App = () => {
     let width = Dimensions.get("window").width;
@@ -91,7 +91,7 @@ const App = () => {
             id: 1,
             title: 'Add a meal',
             subtitle: 'Tell us what you ate today',
-            icon: require('../../assets/Nutrition/Add meal.jpeg'),
+            icon: require('../../../assets/Nutrition/Add meal.jpeg'),
             iconType: 'image',
             showArrow: false,
             backgroundColor: Colors.menuitemNutritionBackgroundPrimary,
@@ -101,7 +101,7 @@ const App = () => {
             id: 2,
             title: 'AI guide',
             subtitle: 'Get AI-Powered Food Suggestions',
-            icon: require('../../assets/Nutrition/AI guide.jpeg'),
+            icon: require('../../../assets/Nutrition/AI guide.jpeg'),
             iconType: 'image',
             backgroundColor: Colors.menuitemNutritionBackgroundSecondary,
         },
@@ -109,7 +109,7 @@ const App = () => {
             id: 3,
             title: 'Food Stats',
             subtitle: 'Instant Macro Insights',
-            icon: require('../../assets/Nutrition/AI guide.jpeg'),
+            icon: require('../../../assets/Nutrition/AI guide.jpeg'),
             iconType: 'image',
             backgroundColor: Colors.menuItemNutritionBackgroundTertiary,
         },
@@ -117,7 +117,7 @@ const App = () => {
             id: 4,
             title: 'Meal Recap',
             subtitle: 'Your Food Diary, Simplified',
-            icon: require('../../assets/Nutrition/Recap.jpeg'),
+            icon: require('../../../assets/Nutrition/Recap.jpeg'),
             iconType: 'image',
             backgroundColor: Colors.menuitemNutritionBackgroundQuad,
         }

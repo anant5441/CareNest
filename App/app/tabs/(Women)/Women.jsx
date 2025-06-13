@@ -1,8 +1,8 @@
 import React from 'react';
 import {Text, StyleSheet, View, TouchableOpacity} from 'react-native';
-import CView from '../../Components/CView';
-import Background from '../../Components/BackgoundWrapper';
-import Colors from "../../Constants/Colors";
+import CView from '../../../Components/CView';
+import Background from '../../../Components/BackgoundWrapper';
+import Colors from "../../../Constants/Colors";
 
 const App = () => {
     return (

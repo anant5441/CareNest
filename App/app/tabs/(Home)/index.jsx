@@ -2,10 +2,11 @@
 import {Text, StyleSheet, TouchableOpacity, View} from 'react-native'
 import {Ionicons} from "@expo/vector-icons";
 //Custom Components
-import CView from '../../Components/CView'
-import Background from '../../Components/BackgoundWrapper'
+import CView from '../../../Components/CView'
+import Background from '../../../Components/BackgoundWrapper'
 //Constants
-import Colors from "../../Constants/Colors";
+import Colors from "../../../Constants/Colors";
+import {router} from "expo-router";
 
 const App = () => {
     return (
@@ -267,6 +268,7 @@ function handleTalkWithAI() {
 }
 function handleNewChat() {
     console.log("handleNewChat");
+    router.push('../stack/HomeChat');
 }
 function handleTrackPotion() {
     console.log("handleTrackPotion");

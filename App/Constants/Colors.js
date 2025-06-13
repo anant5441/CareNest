@@ -34,6 +34,10 @@ const Colors = {
     menuitemNutritionBackgroundQuad: '#F7AF9D4D',
     menuitemNutritionBackgroundEdit: '#D1D1F7',
     mealContainerBackground: 'rgba(255,255,255,0.5)',
+
+    //Chatbot
+    UserTextContainer: 'rgba(189,237,224,0.6)',
+    BotTextContainer: 'rgba(250,201,184,0.6)',
 }
 
 export default Colors;
