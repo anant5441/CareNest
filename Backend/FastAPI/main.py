@@ -31,4 +31,5 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    #Replace host with ur IP
+    uvicorn.run(app, host="192.168.29.233", port=8000)
