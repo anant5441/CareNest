@@ -7,6 +7,8 @@ from langchain_core.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
+from fuzzywuzzy import fuzz
+import spacy
 
 # Option 1: Using transformers for medical NER (Recommended)
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
@@ -138,6 +140,20 @@ def extract_medical_terms(text):
     # Remove duplicates and filter short terms
     return list(set([term for term in medical_terms if len(term) > 2]))
 
+# nlp model for greetings -----------------
+
+def is_greeting(text):
+    greetings = ["hi", "hello", "hey", "hii", "hio", "good morning", "good evening", "namaste", "salaam"]
+    text = text.lower().strip()
+    
+    for greet in greetings:
+        if greet in text:
+            return True
+        if fuzz.partial_ratio(text, greet) >= 80:
+            return True
+    return False
+
+# -------------------------------------------
 
 # Initialize vector store and QA chain
 try:
@@ -163,6 +179,20 @@ async def process_query(request: QueryRequest):
     """Process medical query and return answer with extracted medical terms"""
     if not QA_CHAIN_INITIALIZED:
         raise HTTPException(status_code=500, detail="QA chain not initialized")
+    
+    query_text = request.query.strip()
+
+    # greetings nlp code ---------------
+
+    if is_greeting(query_text):
+        return QueryResponse(
+            result="Hi there! I'm your medical assistant. Ask me anything about your health, symptoms, or treatment.",
+            medical_terms=[],
+            context_valid=False,
+            sources=[]
+        )
+
+    # ----------------------------------
 
     try:
         # Process query
