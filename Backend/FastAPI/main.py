@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.query import router as medical_router
+from routes.symptom import router as symptom_router
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,7 +23,8 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(medical_router, prefix="/api/v1")
+app.include_router(medical_router, prefix="/api/f1")
+app.include_router(symptom_router, prefix="/api/f2")
 
 @app.get("/")
 async def root():
@@ -32,4 +34,4 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     #Replace host with ur IP
-    uvicorn.run(app, host="192.168.29.233", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

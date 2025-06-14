@@ -9,6 +9,10 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from fuzzywuzzy import fuzz
 import spacy
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Option 1: Using transformers for medical NER (Recommended)
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
@@ -70,10 +74,15 @@ class QueryResponse(BaseModel):
 
 # Initialize components
 def load_llm(huggingface_repo_id):
+    """Load HuggingFace LLM with token from environment variables"""
+    hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+    if not hf_token:
+        raise ValueError("HuggingFace token not found in environment variables")
+
     return HuggingFaceEndpoint(
         repo_id=huggingface_repo_id,
         temperature=0.5,
-        huggingfacehub_api_token="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",
+        huggingfacehub_api_token=hf_token,
         max_new_tokens=512,
     )
 
@@ -136,22 +145,23 @@ def extract_medical_terms(text):
     terms = extract_medical_terms_transformers(text)
     medical_terms.extend(terms)
 
-
     # Remove duplicates and filter short terms
     return list(set([term for term in medical_terms if len(term) > 2]))
+
 
 # nlp model for greetings -----------------
 
 def is_greeting(text):
     greetings = ["hi", "hello", "hey", "hii", "hio", "good morning", "good evening", "namaste", "salaam"]
     text = text.lower().strip()
-    
+
     for greet in greetings:
         if greet in text:
             return True
         if fuzz.partial_ratio(text, greet) >= 80:
             return True
     return False
+
 
 # -------------------------------------------
 
@@ -179,7 +189,7 @@ async def process_query(request: QueryRequest):
     """Process medical query and return answer with extracted medical terms"""
     if not QA_CHAIN_INITIALIZED:
         raise HTTPException(status_code=500, detail="QA chain not initialized")
-    
+
     query_text = request.query.strip()
 
     # greetings nlp code ---------------
@@ -246,5 +256,6 @@ async def get_status():
     return {
         "transformers_ner": USE_TRANSFORMERS_NER,
         "qa_chain_initialized": QA_CHAIN_INITIALIZED,
-        "db_path": DB_FAISS_PATH
+        "db_path": DB_FAISS_PATH,
+        "huggingface_token_configured": os.getenv("HUGGINGFACEHUB_API_TOKEN") is not None
     }
