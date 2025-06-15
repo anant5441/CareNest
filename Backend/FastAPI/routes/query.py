@@ -20,7 +20,7 @@ from transformers import AutoTokenizer, AutoModelForTokenClassification, pipelin
 router = APIRouter()
 
 # Configuration
-HUGGINGFACE_REPO_ID = "mistralai/Mistral-7B-Instruct-v0.3"
+HUGGINGFACE_REPO_ID = "HuggingFaceH4/zephyr-7b-beta"
 DB_FAISS_PATH = os.path.join(os.path.dirname(__file__), "..", "vectorstore", "medical_db_faiss")
 
 # Initialize medical NER pipeline using transformers
