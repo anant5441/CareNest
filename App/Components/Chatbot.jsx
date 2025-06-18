@@ -73,13 +73,7 @@ function Chatbot({ handleQuery: handleQueryProp }) {
             } else {
                 // Fallback mock responses (for development/testing)
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                const responses = [
-                    "Oops, the nutrition gnomes are on strike. Try again later.",
-                    "Error 404: Toddler food wisdom not found. Brb, consulting the grandma server.",
-                    "Beep boop. System overloaded from too many mashed banana queries.",
-                    "Fetching response... nope. Server saw broccoli and quit.",
-                    "Alert: AI went to get snacks. Please hold while we crunch... literally."
-                ];
+                const responses = ["Sorry, I'm having trouble responding right now. Please try again later."];
                 response = responses[Math.floor(Math.random() * responses.length)];
             }
 
@@ -93,9 +87,17 @@ function Chatbot({ handleQuery: handleQueryProp }) {
             setMessages(prev => [...prev, botMessage]);
         } catch (error) {
             console.error('Error getting response:', error);
+            const errors = [
+                "Oops, the nutrition gnomes are on strike. Try again later.",
+                "Error 404: Toddler food wisdom not found. Brb, consulting the grandma server.",
+                "Beep boop. System overloaded from too many mashed banana queries.",
+                "Fetching response... nope. Server saw broccoli and quit.",
+                "Alert: AI went to get snacks. Please hold while we crunch... literally."
+            ];
+            let e = errors[Math.floor(Math.random() * errors.length)];
             const errorMessage = {
                 id: Date.now() + 1,
-                text: "Sorry, I'm having trouble responding right now. Please try again later.",
+                text: e,
                 isBot: true,
                 timestamp: new Date()
             };

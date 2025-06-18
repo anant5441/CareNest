@@ -15,6 +15,9 @@ const Colors = {
     exploreOptionPrimary: '#FFEBBA',
     exploreOptionSecondary: '#D1D1F7',
 
+    //NewBorn
+    funFactBgColor: '#FFEF9F80',
+
     //Women
     upperGreetContainer: '#FFEF9F',
     primaryOptionContainer: '#f1f3a2',
