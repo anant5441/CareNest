@@ -267,11 +267,10 @@ function handleTalkWithAI() {
     console.log("handleTalkWithAI");
 }
 function handleNewChat() {
-    console.log("handleNewChat");
     router.push('../stack/HomeChat');
 }
 function handleTrackPotion() {
-    console.log("handleTrackPotion");
+    router.push('../(Nutrition)/Nutrition')
 }
 function handleMalnourishedCare(){
     console.log("handleMalnourishedCare");
