@@ -1,11 +1,12 @@
 import React from 'react';
 import { TouchableOpacity, Image, Text, StyleSheet } from 'react-native';
+import Colors from "../Constants/Colors";
 
 const TouchableImageCard = ({ src, alt, title, onPress, style, imageStyle, textStyle }) => {
     return (
         <TouchableOpacity style={[styles.container, style]} onPress={onPress}>
             <Image
-                source={{ uri: src }}
+                source={src}
                 style={[styles.image, imageStyle]}
                 resizeMode="contain"
                 accessibilityLabel={alt}
@@ -17,22 +18,15 @@ const TouchableImageCard = ({ src, alt, title, onPress, style, imageStyle, textS
 
 const styles = StyleSheet.create({
     container: {
+        backgroundColor: Colors.optionItemBgColor,
         alignItems: 'center',
         padding: 10,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
+        borderRadius:30
+
     },
     image: {
-        width: 150,
-        height: 150,
+        width: 100,
+        height: 100,
         marginBottom: 10,
     },
     title: {

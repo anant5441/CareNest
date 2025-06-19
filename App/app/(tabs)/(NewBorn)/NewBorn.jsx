@@ -1,45 +1,114 @@
-import {Text, StyleSheet, View, Image} from 'react-native'
+import {Text, StyleSheet, View, Image, ScrollView, Alert} from 'react-native'
+import {useEffect, useState} from 'react'
 import CView from '../../../Components/CView'
 import Background from '../../../Components/BackgoundWrapper'
-import Colors from "../../../Constants/Colors";
 import ImgButton from "../../../Components/ImgButton";
+import Colors from "../../../Constants/Colors";
 
 const App = () => {
-    const getAge = () => {
-        return 45;
+    const getAge = async () => {
+        let age = 101;
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(age);
+            }, 2000);
+        });
     }
-    const getFunFact = ()=> {
-        return ("Their vision improves fast in this window. " +
-            "They're starting to track moving objects and lock eyes with people" +
-            " — meaning they're literally beginning to recognize you and process faces, " +
-            "which kicks off early emotional bonding.")
+
+    const [Age, setAge] = useState(0);
+    useEffect(() => {
+        getAge().then((age) => {
+            setAge(age);
+        });
+    }, []);
+
+    const getFunFact = (Age) => {
+        if (Age === 0) {
+            return "Fresh into the world! Your baby is just beginning to breathe and adjust to their new environment.";
+        } else if (Age <= 14) {
+            return "In the first two weeks, babies sleep a lot and rely entirely on reflexes. Feeding and sleeping rule their world.";
+        } else if (Age <= 30) {
+            return "Around this time, babies begin to respond to sounds and start showing signs of a social smile.";
+        } else if (Age <= 50) {
+            return "Their vision improves fast in this window. They're starting to track moving objects and lock eyes with people — meaning they're literally beginning to recognize you and process faces, which kicks off early emotional bonding.";
+        } else if (Age <= 70) {
+            return "Babies start cooing more and exploring vocal sounds. They may begin to mimic facial expressions too!";
+        } else if (Age <= 100) {
+            return "Neck strength is building! Many babies can lift their heads during tummy time and may even start rolling slightly.";
+        } else {
+            return "Every day brings a new skill — from better motor control to stronger social awareness. You're watching a little personality form.";
+        }
+    };
+
+
+    // Handle option clicks
+    const handleOptionClick = (option) => {
+        switch(option.id) {
+            case 1:
+                handleVaccineTracker();
+                break;
+            case 2:
+                handleSymptomAnalyzer();
+                break;
+            case 3:
+                handleMilestoneTracker();
+                break;
+            case 4:
+                handleNutritionAdvisor();
+                break;
+            case 5:
+                handleParentalEducation();
+                break;
+            default:
+                Alert.alert('Coming Soon', `${option.title} feature will be available soon!`);
+        }
+    }
+
+    const handleVaccineTracker = () => {
+        Alert.alert('Vaccine Tracker', 'Opening vaccine tracking...');
+    }
+
+    const handleSymptomAnalyzer = () => {
+        Alert.alert('Symptom Analyzer', 'Opening symptom analysis...');
+    }
+
+    const handleMilestoneTracker = () => {
+        Alert.alert('Milestone Tracker', 'Opening milestone tracking...');
+    }
+
+    const handleNutritionAdvisor = () => {
+        Alert.alert('Nutrition Advisor', 'Opening nutrition guidance...');
+    }
+
+    const handleParentalEducation = () => {
+        Alert.alert('Parental Education', 'Opening educational resources...');
     }
 
     const optionData = [
         {
             id: 1,
             title: 'Vaccine Tracker',
-            image: '../../../assets/NewBorn/Vaccine.png',
+            image: require('../../../assets/NewBorn/Vaccine.png'),
         },
         {
             id: 2,
             title: 'Symptom Analyzer',
-            image: '../../../assets/NewBorn/Symptom.png',
+            image: require('../../../assets/NewBorn/Symptom.png'),
         },
         {
             id: 3,
             title: 'Milestone Tracker',
-            image: '../../../assets/NewBorn/Milestone.png',
+            image: require('../../../assets/NewBorn/Milestone.png'),
         },
         {
             id: 4,
             title: 'Nutrition Advisor',
-            image: '../../../assets/NewBorn/Nutrition.png',
+            image: require('../../../assets/NewBorn/Nutrition.png'),
         },
         {
             id: 5,
             title: 'Parental Education',
-            image: '../../../assets/NewBorn/Education.png',
+            image: require('../../../assets/NewBorn/Education.png'),
         }
     ];
 
@@ -55,17 +124,38 @@ const App = () => {
                         />
                         <View style={styles.textContainer}>
                             <Text style={styles.ageText}>Age</Text>
-                            <Text style={styles.daysText}>{getAge()} Days</Text>
+                            <Text style={styles.daysText}>{Age} Days</Text>
                         </View>
                     </View>
+
+                    {/* Options Title Section */}
+                    <View style={styles.optionTitleContainer}>
+                        <Text style={styles.optionTitleText}>Options</Text>
+                        <View style={styles.scrollIndicator}>
+                            <Text style={styles.scrollHintText}>Swipe to explore →</Text>
+                        </View>
+                    </View>
+
                     <View style={styles.optionContainer}>
-                        {optionData.map(item => (
-                            <ImgButton
-                                key={item.id}
-                                title={item.title}
-                                src={item.image}
-                            />
-                        ))}
+                        <ScrollView
+                            horizontal={true}
+                            showsHorizontalScrollIndicator={false}
+                            style={styles.scrollContainer}
+                            contentContainerStyle={{
+                                paddingHorizontal: 10,
+                                alignItems: 'center',
+                            }}
+                        >
+                            {optionData.map(item => (
+                                <ImgButton
+                                    key={item.id}
+                                    title={item.title}
+                                    src={item.image}
+                                    style={{ marginHorizontal: 8 }}
+                                    onPress={() => handleOptionClick(item)}
+                                />
+                            ))}
+                        </ScrollView>
                     </View>
                     <View style={styles.funFactContainer}>
                         <View style={styles.factBabyImageContainer}>
@@ -84,7 +174,7 @@ const App = () => {
                                     resizeMode={"contain"}
                                 />
                             </View>
-                            <Text style={styles.factText}>{getFunFact()}</Text>
+                            <Text style={styles.factText}>{getFunFact(Age)}</Text>
                         </View>
                     </View>
                 </CView>
@@ -142,10 +232,39 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: '600',
     },
+    // New styles for options title and scroll indicator
+    optionTitleContainer: {
+        width: '94%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 5,
+        marginBottom: 8,
+    },
+    optionTitleText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
+    },
+    scrollIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    scrollHintText: {
+        fontSize: 12,
+        color: 'rgba(255, 255, 255, 0.7)',
+        fontStyle: 'italic',
+    },
     optionContainer: {
-        backgroundColor: 'white',
+        backgroundColor: Colors.optionBgColor,
         height: '30%',
-        width: '100%',
+        width: '94%',
+        paddingVertical: 20,
+        paddingHorizontal: 10,
+        borderRadius: 12,
+    },
+    scrollContainer: {
+        flexGrow: 0,
     },
     funFactContainer: {
         backgroundColor: Colors.funFactBgColor,
@@ -180,4 +299,4 @@ const styles = StyleSheet.create({
     },
 })
 
-export default App
+export default App;
