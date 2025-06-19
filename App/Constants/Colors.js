@@ -17,7 +17,7 @@ const Colors = {
 
     //NewBorn
     optionBgColor: 'rgba(38,255,230,0.06)',
-    optionItemBgColor: 'rgba(38,255,147,0.1)',
+    optionItemBgColor: '#D1D1F7',
     funFactBgColor: '#FFEF9F80',
 
     //Women

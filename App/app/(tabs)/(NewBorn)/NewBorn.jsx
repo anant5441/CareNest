@@ -65,23 +65,23 @@ const App = () => {
     }
 
     const handleVaccineTracker = () => {
-        Alert.alert('Vaccine Tracker', 'Opening vaccine tracking...');
+        Alert.alert('Vaccine Tracker', 'Under Development!');
     }
 
     const handleSymptomAnalyzer = () => {
-        Alert.alert('Symptom Analyzer', 'Opening symptom analysis...');
+        Alert.alert('Symptom Analyzer', 'Under Development!');
     }
 
     const handleMilestoneTracker = () => {
-        Alert.alert('Milestone Tracker', 'Opening milestone tracking...');
+        Alert.alert('Milestone Tracker', 'Under Development!');
     }
 
     const handleNutritionAdvisor = () => {
-        Alert.alert('Nutrition Advisor', 'Opening nutrition guidance...');
+        Alert.alert('Nutrition Advisor', 'Under Development!');
     }
 
     const handleParentalEducation = () => {
-        Alert.alert('Parental Education', 'Opening educational resources...');
+        Alert.alert('Parental Education', 'Under Development!');
     }
 
     const optionData = [
