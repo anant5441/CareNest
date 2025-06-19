@@ -1,20 +1,45 @@
 import {Text, StyleSheet, View, Image, ScrollView, Alert} from 'react-native'
+import {useEffect, useState} from 'react'
 import CView from '../../../Components/CView'
 import Background from '../../../Components/BackgoundWrapper'
-import Colors from "../../../Constants/Colors";
 import ImgButton from "../../../Components/ImgButton";
+import Colors from "../../../Constants/Colors";
 
 const App = () => {
-    const getAge = () => {
-        return 45;
+    const getAge = async () => {
+        let age = 101;
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(age);
+            }, 2000);
+        });
     }
 
-    const getFunFact = ()=> {
-        return ("Their vision improves fast in this window. " +
-            "They're starting to track moving objects and lock eyes with people" +
-            " — meaning they're literally beginning to recognize you and process faces, " +
-            "which kicks off early emotional bonding.")
-    }
+    const [Age, setAge] = useState(0);
+    useEffect(() => {
+        getAge().then((age) => {
+            setAge(age);
+        });
+    }, []);
+
+    const getFunFact = (Age) => {
+        if (Age === 0) {
+            return "Fresh into the world! Your baby is just beginning to breathe and adjust to their new environment.";
+        } else if (Age <= 14) {
+            return "In the first two weeks, babies sleep a lot and rely entirely on reflexes. Feeding and sleeping rule their world.";
+        } else if (Age <= 30) {
+            return "Around this time, babies begin to respond to sounds and start showing signs of a social smile.";
+        } else if (Age <= 50) {
+            return "Their vision improves fast in this window. They're starting to track moving objects and lock eyes with people — meaning they're literally beginning to recognize you and process faces, which kicks off early emotional bonding.";
+        } else if (Age <= 70) {
+            return "Babies start cooing more and exploring vocal sounds. They may begin to mimic facial expressions too!";
+        } else if (Age <= 100) {
+            return "Neck strength is building! Many babies can lift their heads during tummy time and may even start rolling slightly.";
+        } else {
+            return "Every day brings a new skill — from better motor control to stronger social awareness. You're watching a little personality form.";
+        }
+    };
+
 
     // Handle option clicks
     const handleOptionClick = (option) => {
@@ -99,7 +124,7 @@ const App = () => {
                         />
                         <View style={styles.textContainer}>
                             <Text style={styles.ageText}>Age</Text>
-                            <Text style={styles.daysText}>{getAge()} Days</Text>
+                            <Text style={styles.daysText}>{Age} Days</Text>
                         </View>
                     </View>
 
@@ -149,7 +174,7 @@ const App = () => {
                                     resizeMode={"contain"}
                                 />
                             </View>
-                            <Text style={styles.factText}>{getFunFact()}</Text>
+                            <Text style={styles.factText}>{getFunFact(Age)}</Text>
                         </View>
                     </View>
                 </CView>

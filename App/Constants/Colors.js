@@ -16,8 +16,8 @@ const Colors = {
     exploreOptionSecondary: '#D1D1F7',
 
     //NewBorn
-    optionBgColor: '#26FFE61A',
-    optionItemBgColor: 'rgba(38,255,230,0.2)',
+    optionBgColor: 'rgba(38,255,230,0.06)',
+    optionItemBgColor: 'rgba(38,255,147,0.1)',
     funFactBgColor: '#FFEF9F80',
 
     //Women
