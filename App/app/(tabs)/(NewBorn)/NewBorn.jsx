@@ -4,6 +4,7 @@ import CView from '../../../Components/CView'
 import Background from '../../../Components/BackgoundWrapper'
 import ImgButton from "../../../Components/ImgButton";
 import Colors from "../../../Constants/Colors";
+import {router} from "expo-router";
 
 const App = () => {
     const getAge = async () => {
@@ -65,7 +66,7 @@ const App = () => {
     }
 
     const handleVaccineTracker = () => {
-        Alert.alert('Vaccine Tracker', 'Under Development!');
+        router.push('../../stack/VaccTracker');
     }
 
     const handleSymptomAnalyzer = () => {
