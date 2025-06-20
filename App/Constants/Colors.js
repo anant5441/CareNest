@@ -43,6 +43,13 @@ const Colors = {
     //Chatbot
     UserTextContainer: 'rgba(189,237,224,0.6)',
     BotTextContainer: 'rgba(250,201,184,0.6)',
+
+    //VacTracker
+    ageGrpBg: 'rgba(209,209,247,0.5)',
+    ageGrpItem: '#D1D1F7',
+    progressBarEmpty: 'rgba(160,152,250,0.22)',
+    progressBarFill: '#a098fa',
+    checkbox:  '#53F7A2'
 }
 
 export default Colors;
