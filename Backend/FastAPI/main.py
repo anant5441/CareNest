@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.query import router as medical_router
 from routes.symptom import router as symptom_router
+from routes.generate_meal_plan.core import meal_router as meal_generator
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -25,6 +26,7 @@ app.add_middleware(
 # Include routers
 app.include_router(medical_router, prefix="/api/f1")
 app.include_router(symptom_router, prefix="/api/f2")
+app.include_router(meal_generator, prefix="/api/f3")
 
 @app.get("/")
 async def root():
