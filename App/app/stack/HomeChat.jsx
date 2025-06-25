@@ -1,10 +1,12 @@
 import React from 'react'
 import {StyleSheet} from 'react-native'
 import Chatbot from "../../Components/Chatbot";
+import ServerConfig from "../../Constants/serverConfig";
 function HomeChat() {
     const HandleQuery = async (query) => {
+        const URL = ServerConfig.BaseURL + '/api/f1/query';
         try {
-            const response = await fetch('http://192.168.29.233:8000/api/v1/query', {
+            const response = await fetch(URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

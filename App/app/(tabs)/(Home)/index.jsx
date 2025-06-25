@@ -270,7 +270,7 @@ function handleNewChat() {
     router.push('../stack/HomeChat');
 }
 function handleTrackPotion() {
-    router.push('../(Nutrition)/Nutrition')
+    router.navigate('../(Nutrition)/Nutrition');
 }
 function handleMalnourishedCare(){
     console.log("handleMalnourishedCare");

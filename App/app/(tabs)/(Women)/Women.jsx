@@ -3,8 +3,15 @@ import {Text, StyleSheet, View, TouchableOpacity} from 'react-native';
 import CView from '../../../Components/CView';
 import Background from '../../../Components/BackgoundWrapper';
 import Colors from "../../../Constants/Colors";
+import {router} from "expo-router";
 
 const App = () => {
+
+    const handleDietPlanner = ()=>{
+        console.log('handleDietPlanner');
+        router.push('../../stack/GenMeal')
+    }
+
     return (
         <CView style={styles.wrapper} safe={true}>
             <Background>
@@ -56,7 +63,7 @@ const App = () => {
                             <Text style={styles.arrow}>›</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={[{ backgroundColor: Colors.menuItemBackgroundPrimary }, styles.menuItem]}
+                        <TouchableOpacity onPress={handleDietPlanner} style={[{ backgroundColor: Colors.menuItemBackgroundPrimary }, styles.menuItem]}
                         >
                             <View style={styles.menuIconContainer}>
                                 <Text style={styles.menuIcon}>🍽️</Text>

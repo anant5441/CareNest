@@ -84,6 +84,7 @@ def load_llm(huggingface_repo_id):
         temperature=0.5,
         huggingfacehub_api_token=hf_token,
         max_new_tokens=512,
+        provider="hf-inference",
     )
 
 

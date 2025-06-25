@@ -49,7 +49,15 @@ const Colors = {
     ageGrpItem: '#D1D1F7',
     progressBarEmpty: 'rgba(160,152,250,0.22)',
     progressBarFill: '#a098fa',
-    checkbox:  '#53F7A2'
+    checkbox:  '#53F7A2',
+
+    //GenMeal
+    genMealPrimary: '#77E1F4',
+    genMealProgressBarEmpty: 'rgba(160,152,250,0.22)',
+    genMealProgressBarFill: '#a098fa',
+    genMealOptionPrimary: '#D1D1F7',
+    genMealOptionSelected: '#a098fa',
+    genMealOptionBorder: '#7d88a1',
 }
 
 export default Colors;

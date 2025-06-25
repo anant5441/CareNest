@@ -1,4 +1,6 @@
 # backend/main.py
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.query import router as medical_router
@@ -35,5 +37,6 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    #Replace host with ur IP
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    ip = os.getenv("IPV4ADDRESS")
+    port = int(os.getenv("PORT"))
+    uvicorn.run(app, host=ip, port=port)

@@ -198,7 +198,7 @@ query = structured_query_template.format(**user_input)
 # === Step 7: Invoke the RAG Chain ===
 try:
     response = qa_chain.invoke({ "query": query })
-    print("\n📘 FINAL RESPONSE:\n", response["result"])
+    print("\n📘 FINAL time RESPONSE:\n", response["result"])
     print("\n🔗 SOURCES:\n", [doc.metadata for doc in response["source_documents"]])
 except Exception as e:
     print(f"❌ Error during query processing: {str(e)}")
