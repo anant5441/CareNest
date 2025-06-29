@@ -1,7 +1,7 @@
 {
   "expo": {
-    "scheme": "Project-X-scheme",
-    "name": "App",
+    "scheme": "CareNest-scheme",
+    "name": "CareNest",
     "slug": "App",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -28,7 +28,17 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(CareNest) to use your location.",
+          "locationAlwaysPermission": "Allow $(CareNest) to use your location.",
+          "locationWhenInUsePermission": "Allow $(CareNest) to use your location.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
     ]
   }
 }

@@ -58,6 +58,28 @@ const Colors = {
     genMealOptionPrimary: '#D1D1F7',
     genMealOptionSelected: '#a098fa',
     genMealOptionBorder: '#7d88a1',
+
+    //LocLoading
+    locLoadBox:'rgba(209,209,247,0.54)',
+    locMainIcon: 'rgba(119,225,244,0.65)',
+    locMainIconAura: '#3f5be8',
+    locMainIconBorder: '#0fe812',
+    locProgressBarEmpty: 'rgba(160,152,250,0.22)',
+    locProgressBarFill: '#a098fa',
+
+    //NearbyHospitals
+    nearbyHospitals: {
+        DropDown: 'rgba(209,209,247,0.5)',
+        DropDownItemSelected: 'rgba(160,152,250,0.37)',
+        cardColor: 'rgba(209,209,247,0.5)',
+        addressContainer: '#D1D1F7',
+        iconColor: '#786ff8',
+        iconBgColor: '#D1D1F7',
+        buttonColor: 'rgb(160,152,250)',
+        refreshButtonColor: '#675bf3',
+        ErrorText: '#a098fa',
+        ErrorButton: '#a098fa',
+    }
 }
 
 export default Colors;

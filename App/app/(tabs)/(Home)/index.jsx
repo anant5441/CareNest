@@ -49,11 +49,11 @@ const App = () => {
 
                             <TouchableOpacity
                                 style={styles.trackPoshanOption}
-                                onPress={handleTrackPotion}
+                                onPress={handleNearbyHospital}
                                 activeOpacity={0.7}
                             >
-                                <Ionicons name="analytics-outline" size={24} color="#fff" />
-                                <Text style={styles.trackPoshanText}>Track Poshan</Text>
+                                <Ionicons name="medkit-outline" size={24} color="#fff" />
+                                <Text style={styles.trackPoshanText}>Nearby Hospitals</Text>
                             </TouchableOpacity>
                         </CView>
                     </CView>
@@ -269,8 +269,8 @@ function handleTalkWithAI() {
 function handleNewChat() {
     router.push('../stack/HomeChat');
 }
-function handleTrackPotion() {
-    router.navigate('../(Nutrition)/Nutrition');
+function handleNearbyHospital() {
+    router.push('../stack/NearbyHospitals');
 }
 function handleMalnourishedCare(){
     console.log("handleMalnourishedCare");
