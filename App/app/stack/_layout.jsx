@@ -18,7 +18,32 @@ export default function RootLayout() {
             }}
         >
             <Stack.Screen
+                name="login"
+                options={{
+                    title: '',
+                    headerShown: false, // Hide header for login screen
+                }}
+            />
+            <Stack.Screen
                 name="HomeChat"
+                options={{
+                    title: '',
+                }}
+            />
+            <Stack.Screen
+                name="GenMeal"
+                options={{
+                    title: '',
+                }}
+            />
+            <Stack.Screen
+                name="NearbyHospitals"
+                options={{
+                    title: '',
+                }}
+            />
+            <Stack.Screen
+                name="VaccTracker"
                 options={{
                     title: '',
                 }}

@@ -1,16 +1,46 @@
 // React libs
-import {StatusBar, StyleSheet, View, TouchableOpacity} from 'react-native';
-import { Tabs } from 'expo-router';
+import {StatusBar, StyleSheet, TouchableOpacity, Alert} from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 //Custom Components
 import CView from '../../Components/CView';
 import Background from '../../Components/BackgoundWrapper';
 //Constants
 import Colors from "../../Constants/Colors";
+// Auth
+import { useAuth } from '../../hooks/AuthContext';
 
 const RootLayout = () => {
+    const { logout } = useAuth();
+    const router = useRouter();
+
     const handleUserIconPress = () => {
-        console.log('User icon pressed');
+        Alert.alert(
+            'Account',
+            'What would you like to do?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Logout',
+                    onPress: handleLogout,
+                    style: 'destructive',
+                },
+            ],
+            { cancelable: true }
+        );
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            router.replace('/stack/login');
+        } catch (error) {
+            console.error('Logout error:', error);
+            Alert.alert('Error', 'Failed to logout. Please try again.');
+        }
     };
 
     return (
