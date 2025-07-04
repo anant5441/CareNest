@@ -16,7 +16,7 @@ const AuthWrapper = ({ children }) => {
 
         if (!isAuthenticated && !inLoginFlow) {
             // Redirect to login if not authenticated and not already in login flow
-            router.replace('/stack/login');
+            router.replace('/stack/entry');
         } else if (isAuthenticated && inLoginFlow) {
             // Redirect to main app if authenticated and in login flow
             router.replace('/(tabs)/(Home)');

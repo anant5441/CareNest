@@ -79,6 +79,18 @@ const Colors = {
         refreshButtonColor: '#675bf3',
         ErrorText: '#a098fa',
         ErrorButton: '#a098fa',
+    },
+
+    //entry
+    entry: {
+        bg: 'rgba(185,179,255,0.43)',
+        buttonLogin: '#D8D1FF',
+        buttonRegister: '#FFEBBA',
+    },
+    login: {
+        bg: 'rgba(185,179,255,0.43)',
+        inputField: 'rgb(190,185,252)',
+        buttonLogin: 'rgb(150,142,239)',
     }
 }
 
