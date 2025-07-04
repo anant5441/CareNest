@@ -148,7 +148,11 @@ const NearbyHospitals = () => {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollViewContent}
                 >
-                    <Text style={styles.title}>Nearby Hospitals</Text>
+                    <View style={styles.titlecontainer}>
+                        <View style={styles.titleBar}>
+                            <Text style={styles.title}>Nearby Hospitals</Text>
+                        </View>
+                    </View>
 
                     {/* Filter Controls */}
                     <View style={styles.filtersContainer}>
@@ -217,15 +221,26 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 16,
     },
+    titlecontainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+
+    },
+    titleBar:{
+        width: '60%',
+        backgroundColor: Colors.greetingBarBackground,
+        borderRadius: 20,
+        textAlign: 'left',
+        paddingVertical:'5%'
+    },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 16,
         textAlign: 'center',
         color: '#333',
-        marginTop: '10%'
     },
     filtersContainer: {
+        marginTop: '3%',
         marginBottom: 16,
     },
     filterRow: {
@@ -235,9 +250,11 @@ const styles = StyleSheet.create({
     },
     dropdownContainer: {
         flex: 1,
+        marginHorizontal: '3%'
+
     },
     dropdownLabel: {
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: '600',
         color: '#333',
         marginBottom: 8,
