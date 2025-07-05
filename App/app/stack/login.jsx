@@ -14,16 +14,17 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/AuthContext';
 import Colors from '../../Constants/Colors';
 import BackgoundWrapper from "../../Components/BackgoundWrapper";
+import serverConfig from "../../Constants/serverConfig";
 
 const Login = () => {
-    const [email, setEmail] = useState('');
+    const [username, setusername] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
     const router = useRouter();
 
     const handleLogin = async () => {
-        if (!email || !password) {
+        if (!username || !password) {
             Alert.alert('Error', 'Please fill in all fields');
             return;
         }
@@ -31,22 +32,52 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            // Mock authentication - replace with actual API call
-            if (email === 'test@example.com' && password === 'password') {
-                const mockToken = 'mock-jwt-token-' + Date.now();
-                const success = await login(mockToken);
+            const url = serverConfig.BaseURL + '/api/auth/login';
 
-                if (success) {
-                    router.replace('/(tabs)/(Home)');
+            // Create form data for x-www-form-urlencoded
+            const formData = new URLSearchParams();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData.toString(),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Successful login
+                const token = data.token || data.access_token;
+
+                if (token) {
+                    const success = await login(token);
+
+                    if (success) {
+                        router.replace('/(tabs)/(Home)');
+                    } else {
+                        Alert.alert('Error', 'Failed to save login credentials');
+                    }
                 } else {
-                    Alert.alert('Error', 'Failed to save login credentials');
+                    Alert.alert('Error', 'No token received from server');
                 }
             } else {
-                Alert.alert('Error', 'Invalid credentials');
+                // Server returned an error
+                const errorMessage = data.message || data.error || 'Invalid credentials';
+                Alert.alert('Error', errorMessage);
             }
         } catch (error) {
             console.error('Login error:', error);
-            Alert.alert('Error', 'An error occurred during login');
+
+            // Handle network errors
+            if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
+                Alert.alert('Error', 'Network connection failed. Please check your internet connection.');
+            } else {
+                Alert.alert('Error', 'An error occurred during login. Please try again.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -65,13 +96,13 @@ const Login = () => {
                     <View style={styles.inputContainer}>
                         <TextInput
                             style={styles.input}
-                            placeholder="Email"
-                            placeholderTextColor={Colors.placeholder || '#999'}
-                            value={email}
-                            onChangeText={setEmail}
-                            keyboardType="email-address"
+                            placeholder="Username"
+                            placeholderTextColor={'#999'}
+                            value={username}
+                            onChangeText={setusername}
+                            keyboardType="default"
                             autoCapitalize="none"
-                            autoComplete="email"
+                            autoCorrect={false}
                         />
                     </View>
 
@@ -79,7 +110,7 @@ const Login = () => {
                         <TextInput
                             style={styles.input}
                             placeholder="Password"
-                            placeholderTextColor={Colors.placeholder || '#999'}
+                            placeholderTextColor={'#999'}
                             value={password}
                             onChangeText={setPassword}
                             secureTextEntry
@@ -138,7 +169,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         borderWidth: 1,
         borderColor: '#E5E7EB',
-
     },
     loginButton: {
         backgroundColor: Colors.login.buttonLogin,

@@ -35,12 +35,10 @@ export default Entry;
 
 function handleLogin() {
     router.push('../stack/login');
-    console.log("Go login")
 }
 
 function handleRegister() {
     router.push('../stack/login');
-    console.log("Go register")
 }
 
 const styles = StyleSheet.create({
