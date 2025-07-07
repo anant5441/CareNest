@@ -39,6 +39,10 @@ const Colors = {
     menuitemNutritionBackgroundQuad: '#F7AF9D4D',
     menuitemNutritionBackgroundEdit: '#D1D1F7',
     mealContainerBackground: 'rgba(255,255,255,0.5)',
+    mealRecap: {
+        bg: '#D1D1F7',
+        icon:'#a098fa',
+    },
 
     //Chatbot
     UserTextContainer: 'rgba(189,237,224,0.6)',

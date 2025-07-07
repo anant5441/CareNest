@@ -171,8 +171,9 @@ def _add_meal_to_date_helper(
 ) -> dict:
     new_meal = Meal(
         time=meal.time,
+        meal_name=meal.name,
         meal_type=meal.meal_type,
-        composition=_get_composition(meal.meal_name),
+        composition=_get_composition(meal.name),
     )
 
     result = collection.update_one(
@@ -267,4 +268,65 @@ def get_meal_plan_by_date(
         if meal_day["date"] == date:
             return DayMeal(**meal_day)
 
-    return None
+    return []
+
+
+@auth_router.get("/meal_avg", response_model=MealComposition)
+def get_meal_composition_avg(current_user: TokenData = Depends(get_current_user)) -> MealComposition:
+    default_fallback = MealComposition(carbs=0.5 , proteins=0.1 , fats=0.4)
+    meals = get_meal_plans(current_user)
+
+    if not meals:
+        return default_fallback
+
+    all_meals = []
+    for day_meal in meals:
+        daily_meals = day_meal.get("meals", [])
+        for meal in daily_meals:
+            composition = meal.get("composition", {})
+            if composition:
+                all_meals.append(composition)
+
+
+    if not all_meals:
+        return default_fallback
+
+    # Take the last 7 meals (or fewer if less than 7 available)
+    recent_meals = all_meals[-7:]
+
+    total_carbs = 0.0
+    total_proteins = 0.0
+    total_fats = 0.0
+    count = 0
+
+    # Sum up compositions for the recent meals
+    for composition in recent_meals:
+        total_carbs += composition.get("carbs", 0.0)
+        total_proteins += composition.get("proteins", 0.0)
+        total_fats += composition.get("fats", 0.0)
+        count += 1
+
+    # Calculate averages
+    if count == 0:
+        return default_fallback
+
+    avg_carbs = total_carbs / count
+    avg_proteins = total_proteins / count
+    avg_fats = total_fats / count
+
+    # Ensure the averages sum to 1.0
+    total_avg = avg_carbs + avg_proteins + avg_fats
+    if total_avg > 0:
+        avg_carbs = avg_carbs / total_avg
+        avg_proteins = avg_proteins / total_avg
+        avg_fats = avg_fats / total_avg
+    else:
+        # Fallback to default if all values are zero
+        avg_carbs, avg_proteins, avg_fats = 0.5, 0.3, 0.2
+
+
+    return MealComposition(
+        carbs=round(avg_carbs, 3),
+        proteins=round(avg_proteins, 3),
+        fats=round(avg_fats, 3)
+    )

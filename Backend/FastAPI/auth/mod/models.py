@@ -37,6 +37,7 @@ class MealComposition(BaseModel):
 class Meal(BaseModel):
     """Individual meal with timing and composition"""
     time: str = Field(..., description="Time of meal (e.g., '08:00')")
+    meal_name: str = Field(..., description="Name of meal ")
     meal_type: str = Field(..., description="Type of meal (breakfast, lunch, dinner, etc.)")
     composition: MealComposition
 
