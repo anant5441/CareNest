@@ -1,7 +1,7 @@
 # CareNest
 
 ## Overview
-Project-X is a full-stack application designed to provide medical, nutritional, and health-related services. It consists of a React Native (Expo) frontend and a FastAPI backend, supporting features like medical queries, meal planning, symptom analysis, and location-based hospital search.
+CareNest is a full-stack application designed to provide medical, nutritional, and health-related services. It consists of a React Native (Expo) frontend and a FastAPI backend, supporting features like medical queries, meal planning, symptom analysis, and location-based hospital search.
 
 ---
 
