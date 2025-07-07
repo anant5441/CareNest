@@ -2,7 +2,7 @@ import serverConfig from "../Constants/serverConfig";
 
 async function getWeeklyReports(authToken) {
     const URL = serverConfig.BaseURL + '/api/auth/meal_avg';
-
+    console.log(authToken);
     try{
         const response = await fetch(URL, {
             method: 'GET',

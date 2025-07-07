@@ -7,8 +7,24 @@ import Background from '../../../Components/BackgoundWrapper'
 //Constants
 import Colors from "../../../Constants/Colors";
 import {router} from "expo-router";
+import {useAuth} from "../../../hooks/AuthContext";
+import {getUserDetails} from "../../../Helper/general";
+import {useEffect, useState} from "react";
 
 const App = () => {
+    const { authToken,logout } = useAuth();
+    const [Username, setUsername] = useState("User");
+    useEffect(() => {
+        const fetchUserName = async () => {
+            try {
+                let name = await getUserName(authToken)
+                setUsername(name)
+            } catch (e) {
+                await logout();
+            }
+        }
+        fetchUserName()
+    }, [authToken])
     return (
         <CView style={styles.wrapper} safe={true}>
             <Background>
@@ -22,7 +38,7 @@ const App = () => {
                     </CView>
 
                     <CView style={styles.UpperTextContainer} >
-                        <Text style={styles.UpperTextTitle}>Hello {getUserName()}</Text>
+                        <Text style={styles.UpperTextTitle}>Hello {Username}</Text>
                         <Text style={styles.UpperTextSubheading}>Make your day with us</Text>
                     </CView>
 
@@ -260,8 +276,9 @@ function getGreetingIconName() {
     if (hour < 18) return 'sunny-outline';  // day
     return 'moon-outline';   // night
 }
-function getUserName() {
-    return "John";
+async function getUserName(authToken) {
+    let user = await getUserDetails(authToken)
+    return user.username;
 }
 function handleTalkWithAI() {
     console.log("handleTalkWithAI");

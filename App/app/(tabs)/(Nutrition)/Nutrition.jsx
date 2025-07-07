@@ -4,19 +4,18 @@ import {useState, useEffect} from "react";
 //custom components
 import CView from '../../../Components/CView'
 import Background from '../../../Components/BackgoundWrapper'
-import Loading from "../../../Components/Loading";
-//Constants
-import Colors from "../../../Constants/Colors";
-import {useAuth} from "../../../hooks/AuthContext";
-//Helper Functions
-import {getDailyMeals,getWeeklyReports,addMealToDate} from "../../../Helper/Nutrition"
-// New component imports
 import DashboardSection from '../../../Components/Nutrition/DashboardSection';
 import DateNavigation from '../../../Components/Nutrition/DateNavigation';
 import MenuSection from '../../../Components/Nutrition/MenuSection';
 import MealTimeline from '../../../Components/Nutrition/MealTimeline';
 import AddMealModal from '../../../Components/Nutrition/AddMealModal';
 import MealRecapModal from '../../../Components/Nutrition/MealRecapModal';
+//Constants
+import {useAuth} from "../../../hooks/AuthContext";
+//Helper Functions
+import {getDailyMeals,getWeeklyReports,addMealToDate} from "../../../Helper/Nutrition"
+
+
 
 const App = () => {
     let width = Dimensions.get("window").width;

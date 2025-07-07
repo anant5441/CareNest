@@ -40,7 +40,7 @@ const Colors = {
     menuitemNutritionBackgroundEdit: '#D1D1F7',
     mealContainerBackground: 'rgba(255,255,255,0.5)',
     mealRecap: {
-        bg: '#D1D1F7',
+        bg: 'rgba(160,152,250,0.1)',
         icon:'#a098fa',
     },
 
