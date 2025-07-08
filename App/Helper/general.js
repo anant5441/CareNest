@@ -16,12 +16,9 @@ const getUserDetails = async (authToken)=>{
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        console.log(data);
-        return data;
+        return await response.json();
 
     } catch (error) {
-        console.error('Error adding meal:', error);
         throw error;
     }
 }

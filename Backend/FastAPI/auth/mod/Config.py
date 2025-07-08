@@ -12,6 +12,7 @@ client = MongoClient(uri, server_api=ServerApi('1'))
 
 db = client.CareNest
 collection = db.Users
+vaccines = db.master_vaccine
 
 # Send a ping to confirm a successful connection
 try:

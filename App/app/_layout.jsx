@@ -12,7 +12,8 @@ const AuthWrapper = ({ children }) => {
         if (isLoading) return; // Don't redirect while loading
 
         const inAuthGroup = segments[0] === '(tabs)';
-        const inLoginFlow = segments[0] === 'stack' && segments[1] === 'login';
+        const inLoginFlow = (segments[0] === 'stack' && segments[1] === 'login') ||
+            (segments[0] === 'stack' && segments[1] === 'register');
 
         if (!isAuthenticated && !inLoginFlow) {
             // Redirect to login if not authenticated and not already in login flow

@@ -3,6 +3,13 @@ import React from 'react';
 import { router } from 'expo-router';
 import BackgoundWrapper from "../../Components/BackgoundWrapper";
 import Colors from "../../Constants/Colors";
+function handleLogin() {
+    router.push('/stack/login');
+}
+
+function handleRegister() {
+    router.push('/stack/register');
+}
 
 const Entry = () => {
     return (
@@ -33,13 +40,6 @@ const Entry = () => {
 
 export default Entry;
 
-function handleLogin() {
-    router.push('../stack/login');
-}
-
-function handleRegister() {
-    router.push('../stack/login');
-}
 
 const styles = StyleSheet.create({
     container: {

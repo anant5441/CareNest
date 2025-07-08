@@ -1,5 +1,6 @@
+import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,7 +8,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from FastAPI.auth.mod.Config import collection
 from FastAPI.auth.mod.JWTToken import create_access_token
 from FastAPI.auth.mod.models import (
-    User, UserCreate, Token, UserResponse, TokenData, MealCreate, Meal, DayMeal, MealComposition
+    User, Token, UserResponse, TokenData, MealCreate, Meal, DayMeal, MealComposition, BabyCreate, UserCreateWithBaby
 )
 from FastAPI.auth.mod.oauth import bcrypt, verify_password, get_current_user
 
@@ -20,101 +21,101 @@ async def index():
 
 
 # Authentication endpoints
-@auth_router.post('/register', response_model=dict)
-def create_user(request: UserCreate):
-    """Create a new user account"""
-    # Check if user already exists
-    existing_user = collection.find_one({"username": request.username})
+def check_user_exists(username: str, email: str) -> None:
+
+    existing_user = collection.find_one({
+        "$or": [
+            {"username": username},
+            {"email": email}
+        ]
+    })
+
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username already registered"
-        )
+        if existing_user.get("username") == username:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Username already registered"
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email already registered"
+            )
 
-    existing_email = collection.find_one({"email": request.email})
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered"
-        )
 
-    # Hash password and create user
-    hashed_password = bcrypt(request.password)
+def create_baby_profile(baby_name: str, baby_date_of_birth: str) -> Dict[str, Any]:
+    return {
+        "id": str(uuid.uuid4()),
+        "name": baby_name,
+        "date_of_birth": baby_date_of_birth,
+        "vaccines": [],
+        "milestones": []
+    }
 
-    # Create user object with proper structure
-    user_data = {
+
+def create_user_data(request: UserCreateWithBaby, baby_profile: Optional[Dict] = None) -> Dict[str, Any]:
+    """Create user data dictionary"""
+    return {
         "username": request.username,
         "email": request.email,
         "mobile": request.mobile,
-        "pass_hash": hashed_password,
+        "pass_hash": bcrypt(request.password),
         "meals": [],
-        "have_baby": False,
-        "baby": None
+        "have_baby": baby_profile is not None,
+        "baby": baby_profile
     }
 
+
+def insert_user_to_db(user_data: Dict[str, Any]) -> str:
+    """Insert user to database and return user_id"""
     # Validate with Pydantic model
     user = User(**user_data)
 
     # Insert into database
-    user_dict = user.model_dump()
-    result = collection.insert_one(user_dict)
+    result = collection.insert_one(user.model_dump())
 
-    if result.inserted_id:
-        return {"message": "User created successfully", "user_id": str(result.inserted_id)}
-    else:
+    if not result.inserted_id:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create user"
         )
 
+    return str(result.inserted_id)
+
+
 @auth_router.post('/register', response_model=dict)
-def create_user(request: UserCreate):
-    """Create a new user account"""
+def register_user(request: UserCreateWithBaby):
+    """Unified user registration endpoint with optional baby profile"""
+
     # Check if user already exists
-    existing_user = collection.find_one({"username": request.username})
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username already registered"
-        )
+    check_user_exists(request.username, request.email)
 
-    existing_email = collection.find_one({"email": request.email})
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered"
-        )
+    # Create baby profile if data provided
+    baby_profile = None
+    baby_id = None
 
-    # Hash password and create user
-    hashed_password = bcrypt(request.password)
+    if request.has_baby_data():
+        baby_profile = create_baby_profile(request.baby_name, request.baby_date_of_birth)
+        baby_id = baby_profile["id"]
 
-    # Create user object with proper structure
-    user_data = {
-        "username": request.username,
-        "email": request.email,
-        "mobile": request.mobile,
-        "pass_hash": hashed_password,
-        "meals": [],
-        "have_baby": False,
-        "baby": None
+    # Create and insert user
+    user_data = create_user_data(request, baby_profile)
+    user_id = insert_user_to_db(user_data)
+
+    # Build response
+    response_data = {
+        "message": "User created successfully",
+        "user_id": user_id
     }
 
-    # Validate with Pydantic model
-    user = User(**user_data)
+    if baby_profile:
+        response_data.update({
+            "baby_created": True,
+            "baby_id": baby_id,
+            "message": "User and baby profile created successfully"
+        })
 
-    # Insert into database
-    user_dict = user.model_dump()
-    result = collection.insert_one(user_dict)
-
-    if result.inserted_id:
-        return {"message": "User created successfully", "user_id": str(result.inserted_id)}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create user"
-        )
-
-
+    return response_data
 @auth_router.post('/login', response_model=Token)
 def login(request: OAuth2PasswordRequestForm = Depends()):
     """Login user and return access token"""
@@ -330,3 +331,43 @@ def get_meal_composition_avg(current_user: TokenData = Depends(get_current_user)
         proteins=round(avg_proteins, 3),
         fats=round(avg_fats, 3)
     )
+
+# Baby management endpoints
+@auth_router.post("/baby", response_model=dict)
+def create_baby(
+        baby_data: BabyCreate,
+        current_user: TokenData = Depends(get_current_user)
+):
+    # Generate baby ID
+    baby_id = str(uuid.uuid4())
+
+    baby_profile = {
+        "id": baby_id,
+        "name": baby_data.name,
+        "date_of_birth": baby_data.date_of_birth,
+        "vaccines": [],
+        "milestones": []
+    }
+
+    # Update user with baby information
+    result = collection.update_one(
+        {"username": current_user.username},
+        {
+            "$set": {
+                "have_baby": True,
+                "baby": baby_profile
+            }
+        }
+    )
+
+    if result.modified_count:
+        return {"message": "Baby profile created successfully", "baby_id": baby_id}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create baby profile"
+        )
+
+
+
+

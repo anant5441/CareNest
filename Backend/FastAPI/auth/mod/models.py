@@ -71,7 +71,7 @@ class DayMeal(BaseModel):
 class Vaccine(BaseModel):
     """Vaccine record"""
     date: str = Field(..., description="Date of vaccination in YYYY-MM-DD format")
-    name: str = Field(..., min_length=1, description="Name of the vaccine")
+    id: str = Field(..., min_length=1, description="ID of the vaccine")
     venue: str = Field(..., min_length=1, description="Vaccination venue")
 
     @field_validator('date')
@@ -209,7 +209,7 @@ class DayMealCreate(BaseModel):
 class VaccineCreate(BaseModel):
     """Model for creating a vaccine record"""
     date: str
-    name: str
+    id: str
     venue: str
 
 
@@ -226,6 +226,18 @@ class BabyCreate(BaseModel):
     name: str
     date_of_birth: str
 
+class UserCreateWithBaby(BaseModel):
+    username: str
+    email: str
+    mobile: str
+    password: str
+    baby_name: Optional[str] = None
+    baby_date_of_birth: Optional[str] = None
+
+    def has_baby_data(self) -> bool:
+        return bool(self.baby_name and self.baby_date_of_birth)
+
+
 
 class BabyUpdate(BaseModel):
     """Model for updating baby information"""
@@ -233,10 +245,5 @@ class BabyUpdate(BaseModel):
     vaccines: Optional[List[VaccineCreate]] = None
     milestones: Optional[List[MilestoneCreate]] = None
 
-
-# Helper functions for creating meal compositions
-def create_meal(carbs: float = 0.5, proteins: float = 0.3, fats: float = 0.2) -> MealComposition:
-    """Create a balanced meal composition with default ratios"""
-    return MealComposition(carbs=carbs, proteins=proteins, fats=fats)
 
 

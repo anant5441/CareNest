@@ -25,6 +25,13 @@ export default function RootLayout() {
                 }}
             />
             <Stack.Screen
+                name="register"
+                options={{
+                    title: '',
+                    headerShown: false,
+                }}
+            />
+            <Stack.Screen
                 name="HomeChat"
                 options={{
                     title: '',
