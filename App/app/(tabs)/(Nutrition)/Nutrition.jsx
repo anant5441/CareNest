@@ -14,6 +14,7 @@ import MealRecapModal from '../../../Components/Nutrition/MealRecapModal';
 import {useAuth} from "../../../hooks/AuthContext";
 //Helper Functions
 import {getDailyMeals,getWeeklyReports,addMealToDate} from "../../../Helper/Nutrition"
+import {router} from "expo-router";
 
 
 
@@ -138,7 +139,7 @@ const App = () => {
                     setShowAddMealModal(true);
                     break;
                 case 2:
-                    console.log('Navigate to AI Guide');
+                    router.push('../../stack/AiMealAdvisior')
                     break;
                 case 3:
                     console.log('Navigate to Food Stats');

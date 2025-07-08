@@ -1,6 +1,10 @@
+import json
+import os
 import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any
+import google.generativeai as genai
+from dotenv import load_dotenv
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -8,9 +12,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 from FastAPI.auth.mod.Config import collection
 from FastAPI.auth.mod.JWTToken import create_access_token
 from FastAPI.auth.mod.models import (
-    User, Token, UserResponse, TokenData, MealCreate, Meal, DayMeal, MealComposition, BabyCreate, UserCreateWithBaby
+    User, Token, UserResponse, TokenData, MealCreate, Meal, DayMeal, MealComposition, BabyCreate, UserCreateWithBaby,
+    RecommendationResponse, ErrorResponse
 )
 from FastAPI.auth.mod.oauth import bcrypt, verify_password, get_current_user
+
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-2.5-flash')
+
 
 # Create router for authentication
 auth_router = APIRouter()
@@ -368,6 +379,85 @@ def create_baby(
             detail="Failed to create baby profile"
         )
 
+
+@auth_router.get("/ai_meal_guide", response_model=RecommendationResponse,
+         responses={404: {"model": ErrorResponse}, 500: {"model": ErrorResponse}})
+async def get_recommendations(current_user: TokenData = Depends(get_current_user)):
+
+    average_data = get_meal_composition_avg(current_user)
+
+    # 3. Prepare prompt for RAG model
+    prompt = f"""
+    User's average nutrition intake:
+    - Carbohydrates: {average_data.carbs}
+    - Protein: {average_data.proteins}
+    - Fats: {average_data.fats}
+
+    Based on this data:
+    1. Identify any significant deficiencies or imbalances
+    2. Suggest specific foods to address these
+    3. Provide meal recommendations
+    4. Explain the benefits of these suggestions
+
+    Return the response in valid JSON format with these exact keys:
+    {{
+        "analysis": "text analysis of deficiencies",
+        "recommendations": {{
+            "foods": ["list", "of", "specific", "foods"],
+            "meals": ["specific", "meal", "suggestions"],
+            "rationale": "explanation of why these help"
+        }}
+    }}
+    Only return the JSON object, nothing else.
+    """
+
+    # 4. Query Gemini model
+    try:
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+
+        # Clean the response
+        if response_text.startswith('```json'):
+            response_text = response_text[7:-3].strip()
+        elif response_text.startswith('```'):
+            response_text = response_text[3:-3].strip()
+
+        # Parse the JSON
+        recommendations = json.loads(response_text)
+
+        # Validate the response structure
+        if not all(key in recommendations for key in ["analysis", "recommendations"]):
+            raise ValueError("Invalid response format from model")
+
+        if not all(key in recommendations["recommendations"] for key in ["foods", "meals", "rationale"]):
+            raise ValueError("Invalid recommendations format")
+
+        return {
+            "status": "success",
+            "analysis": recommendations["analysis"],
+            "recommendations": recommendations["recommendations"]
+        }
+
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "status": "error",
+                "msg": "Failed to parse model response",
+                "error": str(e),
+                "raw_response": response_text if 'response_text' in locals() else None
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "status": "error",
+                "msg": "Failed to generate recommendations",
+                "error": str(e)
+            }
+        )
 
 
 
