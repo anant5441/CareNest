@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 # Import routers
 from routes.query import router as medical_router
-from routes.symptom import router as symptom_router
+from routes.symptom.symptom import router as symptom_router
 from routes.generate_meal_plan.core import meal_router as meal_generator
 from routes.Location.location import locRouter as locationRouter
 from FastAPI.auth.route import auth_router

@@ -80,7 +80,7 @@ const App = () => {
     }
 
     const handleNutritionAdvisor = () => {
-        Alert.alert('Nutrition Advisor', 'Under Development!');
+        router.push('../../stack/GenMeal')
     }
 
     const handleParentalEducation = () => {
