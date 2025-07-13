@@ -15,6 +15,7 @@ import whisper
 from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
+from langchain_groq import ChatGroq
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from dotenv import load_dotenv
 
@@ -31,7 +32,7 @@ class SymptomAnalyzer:
     """Core class for medical symptom analysis and RAG functionality"""
 
     def __init__(self):
-        self.huggingface_repo_id = "HuggingFaceH4/zephyr-7b-beta"
+        self.groq_model_name = "meta-llama/llama-4-scout-17b-16e-instruct"
         self.embedding_model = None
         self.medical_vector_store = None
         self.symptom_vector_store = None
@@ -115,16 +116,16 @@ class SymptomAnalyzer:
     def _initialize_llm(self):
         """Initialize the HuggingFace LLM"""
         try:
-            hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
-            if not hf_token:
-                raise ValueError("HuggingFace token not found in environment variables")
+            api_key = os.getenv("GROQ_API_KEY")
+            if not api_key:
+                raise ValueError("Missing GROQ_API_KEY in .env")
 
-            logger.info("Initializing HuggingFace LLM...")
-            self.llm = HuggingFaceEndpoint(
-                repo_id=self.huggingface_repo_id,
-                temperature=0.5,
-                huggingfacehub_api_token=hf_token,
-                max_new_tokens=512,
+            logger.info("Connecting to Groq LLM...")
+            self.llm = ChatGroq(
+                groq_api_key=api_key,
+                model_name=self.groq_model_name,
+                temperature=0.3,
+                max_tokens=1024,
             )
 
             # Initialize QA chain - prioritize symptom database, fallback to medical database
@@ -146,7 +147,7 @@ class SymptomAnalyzer:
                 )
 
             db_type = "symptom" if self.symptom_vector_store else "medical" if self.medical_vector_store else "none"
-            logger.info(f"HuggingFace LLM initialized successfully with {db_type} database")
+            logger.info(f"Groq LLM initialized successfully with {db_type} database")
 
         except Exception as e:
             logger.error(f"Failed to initialize LLM: {e}")
@@ -156,7 +157,7 @@ class SymptomAnalyzer:
         """Check if the analyzer is properly initialized"""
         return self._initialized
 
-    def _load_whisper_model(self, model_name: str = "medium"):
+    def _load_whisper_model(self, model_name: str = "large"):
         """Load Whisper model on demand"""
         if self.whisper_model is None:
             logger.info(f"Loading Whisper model ({model_name})...")
