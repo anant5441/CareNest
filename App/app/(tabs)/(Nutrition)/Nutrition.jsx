@@ -10,6 +10,7 @@ import MenuSection from '../../../Components/Nutrition/MenuSection';
 import MealTimeline from '../../../Components/Nutrition/MealTimeline';
 import AddMealModal from '../../../Components/Nutrition/AddMealModal';
 import MealRecapModal from '../../../Components/Nutrition/MealRecapModal';
+import FoodStatsModal from '../../../Components/Nutrition/FoodStatsModal';
 //Constants
 import {useAuth} from "../../../hooks/AuthContext";
 //Helper Functions
@@ -32,6 +33,7 @@ const App = () => {
     const [loading, setLoading] = useState(true);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [dailyMeals, setDailyMeals] = useState([]);
+    const [showFoodStatsModal, setShowFoodStatsModal] = useState(false);
     const [mealsLoading, setMealsLoading] = useState(false);
     const [showAddMealModal, setShowAddMealModal] = useState(false);
     const [showMealRecapModal, setShowMealRecapModal] = useState(false);
@@ -142,7 +144,7 @@ const App = () => {
                     router.push('../../stack/AiMealAdvisior')
                     break;
                 case 3:
-                    console.log('Navigate to Food Stats');
+                    setShowFoodStatsModal(true);
                     break;
                 case 4:
                     fetchTodayMeals();
@@ -203,6 +205,11 @@ const App = () => {
                 mealFormData={mealFormData}
                 onFormDataChange={setMealFormData}
                 onAddMeal={handleAddMeal}
+            />
+            <FoodStatsModal
+                visible={showFoodStatsModal}
+                onClose={() => setShowFoodStatsModal(false)}
+                authToken={authToken}
             />
 
             <MealRecapModal
