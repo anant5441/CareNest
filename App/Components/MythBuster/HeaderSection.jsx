@@ -1,38 +1,69 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { staticMyths, categories } from './StaticMyths';
+import { categories } from './StaticMyths';
+import {fibonacci} from "../../Helper/general";
 
-const HeaderSection = () => (
-    <LinearGradient
-        colors={['#8e44ad', '#9b59b6', '#af7ac5']}
-        style={styles.header}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-    >
-        <View style={styles.headerContent}>
-            <View style={styles.headerIconContainer}>
-                <Ionicons name="shield-checkmark" size={32} color="white" />
-            </View>
-            <Text style={styles.headerTitle}>Pregnancy Myth Buster</Text>
-            <Text style={styles.headerSubtitle}>
-                Get evidence-based answers to your pregnancy questions
-            </Text>
-            <View style={styles.headerStats}>
-                <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{staticMyths.length}</Text>
-                    <Text style={styles.statLabel}>Myths Busted</Text>
+const HeaderSection = () => {
+    const [mythsBustedCount, setMythsBustedCount] = useState(8);
+
+    const getAnimationSteps = (length)=> {
+        let a =1;
+        let steps = [];
+        for (let i = 0; i < length; i++) {
+            let value = fibonacci(a+8);
+            let delay = a * 1000 * 2;
+            steps.push({value: value, delay: delay});
+            a++;
+        }
+        return steps;
+    }
+
+    useEffect(() => {
+        const animationSteps = getAnimationSteps(8);
+
+        const timeouts = animationSteps.map(step =>
+            setTimeout(() => {
+                setMythsBustedCount(step.value);
+            }, step.delay)
+        );
+
+        return () => {
+            timeouts.forEach(timeout => clearTimeout(timeout));
+        };
+    }, []);
+
+    return (
+        <LinearGradient
+            colors={['#8e44ad', '#9b59b6', '#af7ac5']}
+            style={styles.header}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+        >
+            <View style={styles.headerContent}>
+                <View style={styles.headerIconContainer}>
+                    <Ionicons name="shield-checkmark" size={32} color="white" />
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{categories.length - 1}</Text>
-                    <Text style={styles.statLabel}>Categories</Text>
+                <Text style={styles.headerTitle}>Pregnancy Myth Buster</Text>
+                <Text style={styles.headerSubtitle}>
+                    Get evidence-based answers to your pregnancy questions
+                </Text>
+                <View style={styles.headerStats}>
+                    <View style={styles.statItem}>
+                        <Text style={styles.statNumber}>{mythsBustedCount}</Text>
+                        <Text style={styles.statLabel}>Myths Busted</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                        <Text style={styles.statNumber}>{categories.length - 1}</Text>
+                        <Text style={styles.statLabel}>Categories</Text>
+                    </View>
                 </View>
             </View>
-        </View>
-    </LinearGradient>
-);
+        </LinearGradient>
+    );
+};
 
 const styles = StyleSheet.create({
     header: {
@@ -42,7 +73,7 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 25,
         marginBottom: 20,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, y: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 8,
         elevation: 8,

@@ -74,7 +74,7 @@ export const styles = StyleSheet.create({
     chatScrollView: {
         flex: 1,
         padding: 16,
-        backgroundColor: 'red'
+        backgroundColor: 'transparent',
     },
     chatContent: {
         flexGrow: 1,

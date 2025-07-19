@@ -9,11 +9,14 @@ import {
     ActivityIndicator,
     Animated,
     Easing,
+    Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import ChatMessage from './ChatMsg';
 import { styles } from './ChatStyle';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 const ChatSection = ({
                          chatMessages,
@@ -67,9 +70,11 @@ const ChatSection = ({
         outputRange: ['0deg', '180deg'],
     });
 
+    // Increase the maximum height to allow more content and scrolling
+    const maxChatHeight = screenHeight * 0.6; // 60% of screen height
     const heightInterpolation = animatedHeight.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 500], // Adjust based on your content height
+        outputRange: [0, maxChatHeight],
     });
 
     return (
@@ -114,18 +119,25 @@ const ChatSection = ({
                         styles.collapsibleContent,
                         {
                             height: heightInterpolation,
-                            opacity: animatedHeight,
+                            overflow: 'hidden', // Ensure content is clipped
                         }
                     ]}
                 >
                     {/* Chat Messages Container */}
-                    <View style={styles.chatContainer}>
+                    <View style={[styles.chatContainer, { flex: 1 }]}>
                         <ScrollView
                             ref={chatScrollRef}
-                            style={styles.chatScrollView}
-                            contentContainerStyle={styles.chatContent}
+                            style={[styles.chatScrollView, { flex: 1 }]}
+                            contentContainerStyle={[
+                                styles.chatContent,
+                                { flexGrow: 1, paddingBottom: 10 }
+                            ]}
                             showsVerticalScrollIndicator={true}
                             keyboardShouldPersistTaps="handled"
+                            nestedScrollEnabled={true} // Important for nested scrolling
+                            scrollEnabled={true} // Explicitly enable scrolling
+                            bounces={true} // Enable bounce effect
+                            overScrollMode="always" // Android scroll behavior
                             maintainVisibleContentPosition={{
                                 minIndexForVisible: 0,
                                 autoscrollToTopThreshold: 10,
