@@ -5,12 +5,12 @@ from typing import Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from FastAPI.auth.mod.Config import collection
-from FastAPI.auth.mod.JWTToken import create_access_token
-from FastAPI.auth.mod.models import (
+from auth.mod.Config import collection
+from auth.mod.JWTToken import create_access_token
+from auth.mod.models import (
     User, Token, UserResponse, TokenData, MealCreate, Meal, DayMeal, MealComposition, BabyCreate, UserCreateWithBaby
 )
-from FastAPI.auth.mod.oauth import bcrypt, verify_password, get_current_user
+from auth.mod.oauth import bcrypt, verify_password, get_current_user
 
 # Create router for authentication
 auth_router = APIRouter()
