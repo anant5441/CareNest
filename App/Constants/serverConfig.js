@@ -1,4 +1,4 @@
 const ServerConfig = {
-    BaseURL: 'http://192.168.57.50:8000',
+    BaseURL: 'http://192.168.0.105:8000',
 }
 export default ServerConfig;
