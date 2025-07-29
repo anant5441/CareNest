@@ -33,7 +33,6 @@ app.include_router(medical_router, prefix="/api/f1", tags=["Medical Query"])
 app.include_router(meal_generator, prefix="/api/f3", tags=["Meal Planning"])
 app.include_router(locationRouter, prefix="/api/f4", tags=["Location"])
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(myth_router, prefix="/api/f5", tags=["Myth"])
 
 @app.get("/", tags=["Root"])
 async def root():

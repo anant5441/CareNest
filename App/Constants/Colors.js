@@ -43,14 +43,6 @@ const Colors = {
         bg: 'rgba(160,152,250,0.1)',
         icon:'#a098fa',
     },
-    AIGuide: {
-        textContainers:'rgba(160,152,250,0.37)',
-        textBG:'rgba(149,142,232,0.5)',
-        navActiveTintColor:'#a098fa',
-        navInactiveTintColor: 'rgba(160,152,250,0.3)',
-        foodItem:'rgba(160,152,250,0.37)',
-        foodItemIcon:'#786ff8',
-    },
 
     //Chatbot
     UserTextContainer: 'rgba(189,237,224,0.6)',

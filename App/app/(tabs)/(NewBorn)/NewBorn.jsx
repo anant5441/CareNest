@@ -5,12 +5,10 @@ import Background from '../../../Components/BackgoundWrapper'
 import ImgButton from "../../../Components/ImgButton";
 import Colors from "../../../Constants/Colors";
 import {router} from "expo-router";
-import {useAuth} from "../../../hooks/AuthContext";
 
 const { width, height } = Dimensions.get('window');
 
 const App = () => {
-    const { authToken,logout } = useAuth();
     const getAge = async () => {
         let age = 101;
         return new Promise((resolve) => {
@@ -82,7 +80,7 @@ const App = () => {
     }
 
     const handleNutritionAdvisor = () => {
-        router.push('../../stack/GenMeal')
+        Alert.alert('Nutrition Advisor', 'Under Development!');
     }
 
     const handleParentalEducation = () => {

@@ -2,6 +2,7 @@ import serverConfig from "../Constants/serverConfig";
 
 async function getWeeklyReports(authToken) {
     const URL = serverConfig.BaseURL + '/api/auth/meal_avg';
+    console.log(authToken);
     try{
         const response = await fetch(URL, {
             method: 'GET',
@@ -15,10 +16,11 @@ async function getWeeklyReports(authToken) {
         }
 
         const data = await response.json();
+        console.log(data);
         return {
-            carbs: (data.carbs * 100).toFixed(1),
-            protein: (data.fats * 100).toFixed(1),
-            fat: (data.proteins * 100).toFixed(1),
+            carbs: data.carbs * 100,
+            protein: data.fats * 100,
+            fat: data.proteins * 100,
         }
 
     } catch (error) {
