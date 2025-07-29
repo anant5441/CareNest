@@ -1,23 +1,118 @@
+# import os
+# from langchain_huggingface import HuggingFaceEndpoint
+# from langchain_core.prompts import PromptTemplate
+# from langchain.chains import RetrievalQA
+# from langchain_huggingface import HuggingFaceEmbeddings
+# from langchain_community.vectorstores import FAISS
+# from dotenv import load_dotenv
+
+# load_dotenv()
+
+# # step -1: setup llm (mistral with huggingface)
+# HF_TOKEN = os.environ.get("HF_TOKEN")
+# if not HF_TOKEN:
+#     raise ValueError("HuggingFace token not found in environment variables")
+
+# HUGGINGFACE_REPO_ID = "mistralai/Mistral-7B-Instruct-v0.3"
+
+# def load_llm(huggingface_repo_id):
+#     llm = HuggingFaceEndpoint(
+#         repo_id=huggingface_repo_id,
+#         temperature=0.5,
+#         huggingfacehub_api_token=HF_TOKEN,
+#         max_new_tokens=512,  # Removed quotes to ensure it's an integer
+#     )
+#     return llm
+
+# # step -2: connect llm with faiss and create chain
+# CUSTOM_PROMPT_TEMPLATE = """
+# You are a trusted nutrition advisor specializing in infant and child nutrition. Your goal is to provide accurate, safe, and guideline-compliant dietary recommendations for infants and toddlers, based strictly on official sources such as WHO, ICMR, and FSSAI guidelines.
+
+# Use ONLY the context provided below to generate your response. Do not make up any information. If the answer is not present in the context, respond with: "I'm sorry, I don't have that specific information in the official guidelines."
+
+# ---
+# 📘 CONTEXT:
+# {context}
+# ---
+
+# 👶 USER QUERY:
+# {question}
+
+# 💡 YOUR RESPONSE (Follow these rules strictly):
+# - Always mention the appropriate age group if relevant.
+# - Suggest foods, preparation methods, or nutrients only if they are explicitly mentioned in the context.
+# - Highlight safety precautions if any.
+# - If applicable, cite the source like [WHO, 2021] or [ICMR, p.23].
+# - Keep the tone caring, professional, and concise.
+# """
+
+# def set_custom_prompt():
+#     prompt = PromptTemplate(
+#         template=CUSTOM_PROMPT_TEMPLATE,
+#         input_variables=["context", "question"]
+#     )
+#     return prompt
+
+# # load database
+# DB_FAISS_PATH = "vectorstore/db_faiss"
+# try:
+#     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+#     db = FAISS.load_local(
+#         DB_FAISS_PATH, 
+#         embedding_model, 
+#         allow_dangerous_deserialization=True
+#     )
+# except Exception as e:
+#     raise RuntimeError(f"Failed to load FAISS database: {str(e)}")
+
+# # create QA chain
+# try:
+#     qa_chain = RetrievalQA.from_chain_type(
+#         llm=load_llm(HUGGINGFACE_REPO_ID),
+#         chain_type="stuff",
+#         retriever=db.as_retriever(search_kwargs={'k': 3}),
+#         return_source_documents=True,
+#         chain_type_kwargs={
+#             'prompt': set_custom_prompt(),
+#             "document_variable_name": "context"
+#         }
+#     )
+# except Exception as e:
+#     raise RuntimeError(f"Failed to create QA chain: {str(e)}")
+
+# # Now invoke with a single query
+# try:
+#     user_query = input('Write Query Here: ')
+#     response = qa_chain.invoke({'query': user_query})  # Changed 'question' to 'query' to match common practice
+#     print('RESULT:', response["result"])
+#     print("SOURCE DOCUMENTS:", response["source_documents"])
+# except Exception as e:
+#     print(f"Error during query processing: {str(e)}")
+
+
 import os
 from dotenv import load_dotenv
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEndpoint, HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain_community.vectorstores import FAISS
-from langchain_groq import ChatGroq
 
 load_dotenv()
 
-# === Step 1: Setup Groq LLM ===
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise ValueError("Missing GROQ_API_KEY in .env")
+# === Step 1: Setup Hugging Face LLM ===
+HF_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+if not HF_TOKEN:
+    raise ValueError("Missing HF_TOKEN in .env")
+
+HUGGINGFACE_REPO_ID = "HuggingFaceH4/zephyr-7b-beta"
 
 def load_llm():
-    return ChatGroq(
-        model_name="meta-llama/llama-4-scout-17b-16e-instruct",
-        api_key=GROQ_API_KEY,
-        temperature=0.3,
+    return HuggingFaceEndpoint(
+        repo_id=HUGGINGFACE_REPO_ID,
+        temperature=0.5,
+        huggingfacehub_api_token=HF_TOKEN,
+        max_new_tokens=512,
+        provider="hf-inference",
     )
 
 # === Step 2: Load FAISS DB ===
@@ -29,7 +124,7 @@ DB_FAISS_PATH = os.path.join(current_dir, "..", "..", "vectorstore", "meal_gener
 # Normalize the path to handle any path separator issues
 DB_FAISS_PATH = os.path.normpath(DB_FAISS_PATH)
 
-embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 db = FAISS.load_local(DB_FAISS_PATH, embedding_model, allow_dangerous_deserialization=True)
 
 # === Step 3: LangChain Prompt Template (Context + Question only) ===
@@ -100,3 +195,10 @@ Generate a {meal_duration}-day meal plan for a {age}-month-old infant with these
 
 query = structured_query_template.format(**user_input)
 
+# === Step 7: Invoke the RAG Chain ===
+try:
+    response = qa_chain.invoke({ "query": query })
+    print("\n📘 FINAL time RESPONSE:\n", response["result"])
+    print("\n🔗 SOURCES:\n", [doc.metadata for doc in response["source_documents"]])
+except Exception as e:
+    print(f"❌ Error during query processing: {str(e)}")
