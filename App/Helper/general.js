@@ -22,5 +22,21 @@ const getUserDetails = async (authToken)=>{
         throw error;
     }
 }
+function fibonacci(n) {
+    if (n < 0) return null;
+    if (n === 0) return 0;
+    if (n === 1) return 1;
 
-export {getUserDetails}
+    let prev = 0, curr = 1;
+
+    for (let i = 2; i <= n; i++) {
+        const next = prev + curr;
+        prev = curr;
+        curr = next;
+    }
+
+    return curr;
+}
+
+
+export {getUserDetails , fibonacci}
