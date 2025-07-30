@@ -8,9 +8,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 from auth.mod.Config import collection
 from auth.mod.JWTToken import create_access_token
 from auth.mod.models import (
-    User, Token, UserResponse, TokenData, MealCreate, Meal, DayMeal, MealComposition, BabyCreate, UserCreateWithBaby
+    User, Token, UserResponse, TokenData, MealCreate, Meal, DayMeal, MealComposition, BabyCreate, UserCreateWithBaby,
+    RecommendationResponse, ErrorResponse
 )
 from auth.mod.oauth import bcrypt, verify_password, get_current_user
+
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-2.5-flash')
+
 
 # Create router for authentication
 auth_router = APIRouter()
@@ -370,4 +377,28 @@ def create_baby(
 
 
 
+
+
+    Returns the carbohydrate, protein, and fat ratios that sum to 1.0.
+    """
+    try:
+        meal_name = meal_name.strip()
+
+        if not meal_name or len(meal_name) > 200:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Meal name must be between 1 and 200 characters"
+            )
+
+        composition = _get_composition(meal_name)
+
+        return composition
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error while analyzing meal composition: {str(e)}"
+        )
 
