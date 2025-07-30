@@ -1,41 +1,37 @@
 // React libs
-import {StatusBar, StyleSheet, Alert} from 'react-native';
-import React, { useState, useEffect } from 'react';
+import {StatusBar, StyleSheet, TouchableOpacity, Alert} from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 //Custom Components
 import CView from '../../Components/CView';
 import Background from '../../Components/BackgoundWrapper';
-import UserIcon from '../../Components/UserIcon';
 //Constants
 import Colors from "../../Constants/Colors";
 // Auth
-import {useAuth} from "../../hooks/AuthContext";
-import {getUserDetails} from "../../Helper/general";
-
-
-
-async function getUserName(authToken) {
-    let user = await getUserDetails(authToken)
-    return user.username;
-}
+import { useAuth } from '../../hooks/AuthContext';
 
 const RootLayout = () => {
-    const { authToken, logout } = useAuth();
+    const { logout } = useAuth();
     const router = useRouter();
-    const [Username, setUsername] = useState("User");
 
-    useEffect(() => {
-        const fetchUserName = async () => {
-            try {
-                let name = await getUserName(authToken);
-                setUsername(name);
-            } catch (e) {
-                await logout();
-            }
-        };
-        fetchUserName();
-    }, [authToken]);
+    const handleUserIconPress = () => {
+        Alert.alert(
+            'Account',
+            'What would you like to do?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Logout',
+                    onPress: handleLogout,
+                    style: 'destructive',
+                },
+            ],
+            { cancelable: true }
+        );
+    };
 
     const handleLogout = async () => {
         try {
@@ -49,11 +45,18 @@ const RootLayout = () => {
 
     return (
         <CView safe={true} style={styles.container}>
-            <StatusBar style="auto" />
-            <UserIcon
-                onLogout={handleLogout}
-                username={Username}
-            />
+            <StatusBar style="light" />
+            <TouchableOpacity
+                style={styles.userIcon}
+                onPress={handleUserIconPress}
+                activeOpacity={0.7}
+            >
+                <Ionicons
+                    name="person-outline"
+                    size={30}
+                    color={Colors.userIconColor}
+                />
+            </TouchableOpacity>
             <Background>
                 <Tabs
                     screenOptions={{
@@ -126,6 +129,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderStyle: 'solid',
     },
+    userIcon: {
+        position: 'absolute',
+        height: 40,
+        width: 40,
+        borderRadius: 20,
+        top: 10,
+        right: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: Colors.userIconBackground,
+        zIndex: 1,
+    }
 });
 
 export default RootLayout;

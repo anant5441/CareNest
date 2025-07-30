@@ -106,27 +106,3 @@ See the contributing section in `App/README.md` for guidelines.
 
 ## License
 This project is private and proprietary.
-
-
----
-
-## 🖼️ All Assets Images
-
-
-
-<p align="center">
-  <img src="./Assets/Screenshot_2025-06-23-20-46-50-82_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 1" width="200" />
-  <img src="./Assets/Screenshot_2025-06-23-20-47-46-42_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 2" width="200" />
-  <img src="./Assets/Screenshot_2025-06-23-20-48-06-60_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 3" width="200" />
-  <img src="./Assets/Screenshot_2025-06-23-20-48-26-24_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 4" width="200" />
-  <img src="./Assets/Screenshot_2025-06-23-20-48-56-94_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 5" width="200" />
-  <img src="./Assets/Screenshot_2025-06-23-20-49-11-31_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 6" width="200" />
-  <img src="./Assets/Screenshot_2025-06-29-14-36-57-43_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 7" width="200" />
-  <img src="./Assets/Screenshot_2025-06-29-17-32-17-59_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 8" width="200" />
-  <img src="./Assets/Screenshot_2025-07-07-20-12-07-61_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 9" width="200" />
-  <img src="./Assets/Screenshot_2025-07-07-20-12-14-62_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 10" width="200" />
-  <img src="./Assets/Screenshot_2025-07-07-20-12-23-06_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 11" width="200" />
-  <img src="./Assets/Screenshot_2025-07-08-21-42-46-74_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 12" width="200" />
-  <img src="./Assets/Screenshot_2025-07-08-21-42-52-54_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 13" width="200" />
-  <img src="./Assets/Screenshot_2025-07-08-21-42-57-66_f73b71075b1de7323614b647fe394240.jpg" alt="Screenshot 14" width="200" />
-</p>

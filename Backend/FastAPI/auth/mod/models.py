@@ -247,18 +247,3 @@ class BabyUpdate(BaseModel):
 
 
 
-class RecommendationItem(BaseModel):
-    foods: List[str]
-    meals: List[str]
-    rationale: str
-
-class RecommendationResponse(BaseModel):
-    status: str
-    analysis: str
-    recommendations: RecommendationItem
-
-class ErrorResponse(BaseModel):
-    status: str
-    msg: str
-    error: str
-    raw_response: str = None
