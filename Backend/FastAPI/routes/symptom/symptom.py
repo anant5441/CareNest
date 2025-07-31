@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -85,7 +87,7 @@ async def health_check():
         if symptom_analyzer.is_initialized():
             return HealthCheckResponse(
                 status="healthy",
-                message="Medical analysis service is running properly"
+                message="Medical analysis service is running properly with Groq LLM"
             )
         else:
             raise HTTPException(
@@ -265,3 +267,15 @@ async def general_query(request: QueryRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Query processing failed: {str(e)}"
         )
+
+
+@router.get("/status")
+async def get_status():
+    """Get the status of various components"""
+    return {
+        "llm_provider": "Groq",
+        "llm_model": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "symptom_analyzer_initialized": symptom_analyzer.is_initialized(),
+        "groq_api_configured": os.getenv("GROQ_API_KEY") is not None,
+        "embedding_model": "all-MiniLM-L6-v2"
+    }
