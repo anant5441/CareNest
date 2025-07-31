@@ -281,7 +281,7 @@ async function getUserName(authToken) {
     return user.username;
 }
 function handleTalkWithAI() {
-    console.log("handleTalkWithAI");
+    router.push('../stack/TalkAI');
 }
 function handleNewChat() {
     router.push('../stack/HomeChat');

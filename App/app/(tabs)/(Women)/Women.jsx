@@ -5,11 +5,14 @@ import Background from '../../../Components/BackgoundWrapper';
 import Colors from "../../../Constants/Colors";
 import {router} from "expo-router";
 
+function handleMythBuster() {
+    router.push('../../stack/MythBuster');
+}
+
 const App = () => {
 
     const handleDietPlanner = ()=>{
         console.log('handleDietPlanner');
-        router.push('../../stack/GenMeal')
     }
 
     return (
@@ -55,7 +58,9 @@ const App = () => {
                             <Text style={styles.arrow}>›</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={[{ backgroundColor: Colors.menuItemBackgroundSecondary }, styles.menuItem]}>
+                        <TouchableOpacity
+                            onPress={handleMythBuster}
+                            style={[{ backgroundColor: Colors.menuItemBackgroundSecondary }, styles.menuItem]}>
                             <View style={styles.menuIconContainer}>
                                 <Text style={styles.menuIcon}>📚</Text>
                             </View>

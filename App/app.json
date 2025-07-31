@@ -38,6 +38,12 @@
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow CareNest to access your microphone."
+        }
       ]
     ]
   }
