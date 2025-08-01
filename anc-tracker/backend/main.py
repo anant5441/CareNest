@@ -68,6 +68,8 @@ def register_pregnant_woman(user: User):
     # Auto-generate ANC visits (8 visits as per WHO)
     anc_visits = generate_anc_visits(str(result.inserted_id), user.lmp, user.edd)
     db["anc_visits"].insert_many(anc_visits)
+    vaccines = generate_vaccine_schedule(str(result.inserted_id), user.lmp)
+    db["vaccinations"].insert_many(vaccines)
     
     return {"message": "User registered and ANC visits scheduled!"}
 
@@ -98,6 +100,26 @@ def generate_anc_visits(user_id: str, lmp: str, edd: str) -> List[dict]:
         })
     return visits
 
+def generate_vaccine_schedule(user_id: str, lmp: str) -> List[dict]:
+    lmp_date = datetime.strptime(lmp, "%Y-%m-%d")
+    schedule = [
+        {"name": "TT1", "due_date": lmp_date + timedelta(weeks=12)},
+        {"name": "TT2", "due_date": lmp_date + timedelta(weeks=16)},
+        {"name": "TT Booster", "due_date": lmp_date + timedelta(weeks=20)},
+        {"name": "HepB", "due_date": lmp_date + timedelta(weeks=24)},
+        {"name": "DTP", "due_date": lmp_date + timedelta(weeks=28)},
+        {"name": "Influenza", "due_date": lmp_date + timedelta(weeks=32)},
+    ]
+    vaccines = []
+    for v in schedule:
+        vaccines.append({
+            "user_id": user_id,
+            "name": v["name"],
+            "due_date": v["due_date"].strftime("%Y-%m-%d"),
+            "status": "Pending"
+        })
+    return vaccines
+
 # @app.get("/users/{user_id}/visits")
 # def get_anc_visits(user_id: str):
 #     """Get all ANC visits for a user"""
@@ -114,37 +136,6 @@ def get_anc_visits(user_id: str):
     
     return {"visits": visits}
 
-# @app.put("/visits/{visit_id}/mark-visited")
-# def mark_visit_visited(
-#     visit_id: str,
-#     bp: str = None,
-#     weight: float = None,
-#     notes: str = None
-# ):
-#     visits_collection = db["anc_visits"]
-
-#     try:
-#         obj_id = ObjectId(visit_id)
-#     except Exception:
-#         raise HTTPException(status_code=400, detail="Invalid visit ID")
-
-#     update_data = {
-#         "status": "Visited",
-#         "actual_visit_date": datetime.now().strftime("%Y-%m-%d"),
-#         "bp": bp,
-#         "weight": weight,
-#         "notes": notes
-#     }
-
-#     result = visits_collection.update_one(
-#         {"_id": obj_id},  # ✅ Match ObjectId
-#         {"$set": update_data}
-#     )
-
-#     if result.modified_count == 0:
-#         raise HTTPException(status_code=404, detail="Visit not found")
-
-#     return {"message": "Visit marked as visited!"}
 
 @app.put("/visits/{visit_id}/mark-visited")
 def mark_visit_visited(visit_id: str, data: VisitUpdate):
@@ -172,6 +163,24 @@ def mark_visit_visited(visit_id: str, data: VisitUpdate):
         raise HTTPException(status_code=404, detail="Visit not found")
 
     return {"message": "Visit marked as visited!"}
+
+@app.get("/users/{user_id}/vaccinations")
+def get_vaccinations(user_id: str):
+    vaccines = list(db["vaccinations"].find({"user_id": user_id}))
+    for v in vaccines:
+        v["_id"] = str(v["_id"])
+    return {"vaccines": vaccines}
+
+@app.put("/vaccinations/{vaccine_id}/mark-completed")
+def mark_vaccine_completed(vaccine_id: str):
+    result = db["vaccinations"].update_one(
+        {"_id": ObjectId(vaccine_id)},
+        {"$set": {"status": "Completed"}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Vaccine not found")
+    return {"message": "Vaccine marked as completed"}
+
 
 # Run the server
 if __name__ == "__main__":

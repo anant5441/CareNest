@@ -1,5 +1,6 @@
 // import React, { useState, useEffect } from "react";
 // import axios from "axios";
+// import HealthMetricsChart from "../components/HealthMetricsChart";
 // import { useParams } from "react-router-dom";
 // import {
 //   Table, TableBody, TableCell, TableContainer,
@@ -56,11 +57,14 @@
 //                   </TableCell>
 //                 </TableRow>
 
-//                 {/* Additional row for visit details */}
+//                 {/* Detail row for visited appointments */}
 //                 {visit.status === "Visited" && (
 //                   <TableRow>
 //                     <TableCell colSpan={4}>
 //                       <Box sx={{ p: 2, backgroundColor: "#f9f9f9", borderRadius: 1 }}>
+//                         <Typography variant="body2">
+//                           <strong>Actual Visit Date:</strong> {visit.actual_visit_date || "N/A"}
+//                         </Typography>
 //                         <Typography variant="body2">
 //                           <strong>Blood Pressure:</strong> {visit.bp || "N/A"}
 //                         </Typography>
@@ -101,6 +105,7 @@
 //         </>
 //       )}
 //     </TableContainer>
+    
 //   );
 // }
 
@@ -108,6 +113,9 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import VaccinationTable from "../components/VaccinationTable";
+import VisitSummary from "../components/VisitSummary";
+import HealthMetricsChart from "../components/HealthMetricsChart";
 import { useParams } from "react-router-dom";
 import {
   Table, TableBody, TableCell, TableContainer,
@@ -134,6 +142,11 @@ function Visits() {
   }, [userId]);
 
   return (
+  <>
+  <VaccinationTable/>
+  <br></br>
+  {visits.length > 0 && <VisitSummary visits={visits} />}
+  
     <TableContainer component={Paper}>
       <Table>
         <TableHead>
@@ -164,7 +177,6 @@ function Visits() {
                   </TableCell>
                 </TableRow>
 
-                {/* Detail row for visited appointments */}
                 {visit.status === "Visited" && (
                   <TableRow>
                     <TableCell colSpan={4}>
@@ -212,7 +224,13 @@ function Visits() {
         </>
       )}
     </TableContainer>
-  );
+
+    {visits.length > 0 && <HealthMetricsChart visits={visits} />}
+    
+
+  </>
+);
+
 }
 
 export default Visits;
