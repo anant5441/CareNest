@@ -181,6 +181,13 @@ def mark_vaccine_completed(vaccine_id: str):
         raise HTTPException(status_code=404, detail="Vaccine not found")
     return {"message": "Vaccine marked as completed"}
 
+@app.get("/users/{user_id}")
+def get_user(user_id: str):
+    user = db["users"].find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user["_id"] = str(user["_id"])
+    return user
 
 # Run the server
 if __name__ == "__main__":

@@ -113,6 +113,8 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import EDDCountdown from "../components/EDDCountdown";
+import VisitReport from "../components/VisitReport";
 import VaccinationTable from "../components/VaccinationTable";
 import VisitSummary from "../components/VisitSummary";
 import HealthMetricsChart from "../components/HealthMetricsChart";
@@ -125,6 +127,7 @@ import VisitDetails from "./VisitDetails";
 
 function Visits() {
   const { userId } = useParams();
+  const [user, setUser] = useState(null);
   const [visits, setVisits] = useState([]);
   const [selectedVisit, setSelectedVisit] = useState(null);
 
@@ -137,15 +140,35 @@ function Visits() {
     }
   };
 
-  useEffect(() => {
-    if (userId) fetchVisits();
-  }, [userId]);
+//   useEffect(() => {
+//     if (userId) fetchVisits();
+//   }, [userId]);
+
+useEffect(() => {
+  if (userId) {
+    fetchVisits();
+    fetchUser(); // new function
+  }
+}, [userId]);
+
+const fetchUser = async () => {
+  try {
+    const response = await axios.get(`http://localhost:8000/users/${userId}`);
+    setUser(response.data);
+  } catch (err) {
+    console.error("Error fetching user:", err);
+  }
+};
 
   return (
   <>
   <VaccinationTable/>
   <br></br>
   {visits.length > 0 && <VisitSummary visits={visits} />}
+  {visits.length > 0 && <VisitReport visits={visits} />}
+  {user && <EDDCountdown lmp={user.lmp} edd={user.edd} />}
+
+
   
     <TableContainer component={Paper}>
       <Table>
