@@ -1,18 +1,15 @@
-from fastapi import FastAPI, HTTPException, APIRouter
-from openai import api_key
-from pydantic import BaseModel
-from typing import Optional
-import requests
 import os
-from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
+
+import requests
 from dotenv import load_dotenv
-from fastapi.responses import FileResponse
+from fastapi import HTTPException, APIRouter
+from pydantic import BaseModel
 
 load_dotenv()
 
 locRouter = APIRouter()
 
-from fastapi.staticfiles import StaticFiles
 
 @locRouter.get("/")
 async def read_root():

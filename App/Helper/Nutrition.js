@@ -16,9 +16,9 @@ async function getWeeklyReports(authToken) {
 
         const data = await response.json();
         return {
-            carbs: data.carbs * 100,
-            protein: data.fats * 100,
-            fat: data.proteins * 100,
+            carbs: (data.carbs * 100).toFixed(1),
+            protein: (data.fats * 100).toFixed(1),
+            fat: (data.proteins * 100).toFixed(1),
         }
 
     } catch (error) {

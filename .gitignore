@@ -145,3 +145,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+
+# idea files
+.idea
+App/.idea
+Backend/.idea
