@@ -79,3 +79,7 @@ try:
     print("\n🔗 SOURCES:\n", [doc.metadata for doc in response["source_documents"]])
 except Exception as e:
     print(f"❌ Error during query processing: {str(e)}")
+
+
+    # function in place of final call, 
+    # function to tak
