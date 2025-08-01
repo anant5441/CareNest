@@ -211,6 +211,10 @@ const fetchUser = async () => {
                           <strong>Blood Pressure:</strong> {visit.bp || "N/A"}
                         </Typography>
                         <Typography variant="body2">
+  <strong>Pulse:</strong> {visit.pulse || "N/A"} bpm
+</Typography>
+
+                        <Typography variant="body2">
                           <strong>Weight:</strong> {visit.weight || "N/A"} kg
                         </Typography>
                         <Typography variant="body2">

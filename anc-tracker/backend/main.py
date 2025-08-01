@@ -43,15 +43,18 @@ class ANCVisit(BaseModel):
     visit_number: int
     scheduled_date: str
     actual_visit_date: str = None
-    status: str = "Pending"  # "Pending", "Visited", "Missed"
+    status: str = "Pending"
     bp: str = None
     weight: float = None
     notes: str = None
+    pulse: int = None  # 👈 NEW
 
 class VisitUpdate(BaseModel):
     bp: Optional[str] = None
     weight: Optional[float] = None
     notes: Optional[str] = None
+    pulse: Optional[int] = None  # 👈 NEW
+
 
 def serialize_doc(doc):
     doc["_id"] = str(doc["_id"])
@@ -151,7 +154,8 @@ def mark_visit_visited(visit_id: str, data: VisitUpdate):
         "actual_visit_date": datetime.now().strftime("%Y-%m-%d"),
         "bp": data.bp,
         "weight": data.weight,
-        "notes": data.notes
+        "notes": data.notes,
+        "pulse":data.pulse
     }
 
     result = visits_collection.update_one(

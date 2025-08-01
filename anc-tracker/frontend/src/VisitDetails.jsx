@@ -4,10 +4,12 @@ import { TextField, Button, Container, Typography, Box } from "@mui/material";
 
 function VisitDetails({ visitId }) {
   const [formData, setFormData] = useState({
-    bp: "",
-    weight: "",
-    notes: "",
-  });
+  bp: "",
+  weight: "",
+  notes: "",
+  pulse: ""
+});
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,6 +34,15 @@ function VisitDetails({ visitId }) {
           onChange={(e) => setFormData({ ...formData, bp: e.target.value })}
         />
         <TextField
+  label="Pulse (bpm)"
+  type="number"
+  fullWidth
+  margin="normal"
+  value={formData.pulse}
+  onChange={(e) => setFormData({ ...formData, pulse: e.target.value })}
+/>
+
+        <TextField
           label="Weight (kg)"
           type="number"
           fullWidth
@@ -48,6 +59,7 @@ function VisitDetails({ visitId }) {
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
         />
+
         <Box mt={2}>
           <Button type="submit" variant="contained" color="primary">
             Submit
