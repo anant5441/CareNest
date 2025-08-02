@@ -30,7 +30,7 @@ This is a React Native mobile application built with Expo, providing a modern an
 To start the development server:
 
 ```bash
-npm start
+npx start
 # or
 yarn start
 ```
