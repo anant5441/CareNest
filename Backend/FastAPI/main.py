@@ -10,6 +10,7 @@ from routes.generate_meal_plan.core import meal_router as meal_generator
 from routes.Location.location import locRouter as locationRouter
 from routes.MythBuster.MythBuster import myth_router as myth_router
 from routes.DeepGram.core import DeepGramRouter as voice_router
+from routes.meal_woman.dpcore import meal_router as meal_woman_router
 from auth.route import auth_router
 
 load_dotenv()
@@ -35,6 +36,7 @@ app.include_router(medical_router, prefix="/api/f1", tags=["Medical Query"])
 app.include_router(meal_generator, prefix="/api/f3", tags=["Meal Planning"])
 app.include_router(locationRouter, prefix="/api/f4", tags=["Location"])
 app.include_router(myth_router, prefix="/api/f5", tags=["MythBuster"])
+app.include_router(meal_woman_router, prefix="/api/f6", tags=["Meal Planning"])
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(voice_router, prefix="/api/voice", tags=["Authentication"])
 

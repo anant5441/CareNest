@@ -10,7 +10,7 @@ from langchain.llms.base import LLM
 from langchain.llms.base import LLM
 from pydantic import PrivateAttr
 from typing import List, Optional
-from prompts import custom_prompt
+from .prompts import custom_prompt
 
 # === Load env (optional) ===
 load_dotenv()
@@ -19,7 +19,14 @@ load_dotenv()
 # === Load FAISS Vector Store ===
 from langchain_huggingface import HuggingFaceEmbeddings
 embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-DB_FAISS_PATH = DB_FAISS_PATH = "../vectorstore/dietplanner_db_faiss"
+
+# Get the current file's directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Navigate to the project root and then to vectorstore
+DB_FAISS_PATH = os.path.join(current_dir, "..", "..", "vectorstore", "dietplanner_db_faiss")
+
+# Normalize the path to handle any path separator issues
+DB_FAISS_PATH = os.path.normpath(DB_FAISS_PATH)
 
 db = FAISS.load_local(DB_FAISS_PATH, embedding_model, allow_dangerous_deserialization=True)
 
@@ -68,8 +75,8 @@ qa_chain = RetrievalQA.from_chain_type(
 )
 
 
-from prompts import structured_query_template
-from prompts import user_input
+from .prompts import structured_query_template
+from .prompts import user_input
 query = structured_query_template.format(**user_input)
 
 # === Final Call ===
