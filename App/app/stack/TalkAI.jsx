@@ -27,7 +27,6 @@ const { width, height } = Dimensions.get('window');
 
 
 function redirect(idx) {
-    let a = require('./GenMeal')
     switch (idx) {
         case 0:
             router.push('./HomeChat');
@@ -47,8 +46,15 @@ function redirect(idx) {
         case 5:
             router.push('./GenMeal');
             break;
+        case 6:
+            router.push('./MythBuster');
+            break;
+        case 7:
+            router.push('./GenMealWomen');
+            break;
         default:
-
+            alert("Unable to recognise ur request");
+            break;
     }
 }
 

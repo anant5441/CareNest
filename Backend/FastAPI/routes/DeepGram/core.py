@@ -17,7 +17,8 @@ chat_features = {
     3: "Meal tracking and guidance based on prev diets",
     4: "Vaccine tracker for babies",
     5: "Meal generator for babies",
-    6: "Myth Buster"
+    6: "General Myth Busting for pregnancy",
+    7: "Meal generator for women",
 }
 
 
@@ -27,12 +28,7 @@ def detect_relevant_feature(transcript: str) -> int:
         Analyze the following medical query transcript and determine which feature category it best fits into.
 
         Available features:
-        0: General chat for all the med queries
-        1: Find the nearby hospital
-        3: Meal tracking and guidance based on prev diets
-        4: Vaccine tracker for babies
-        5: Meal generator for babies
-        6: Myth Buster
+        "{chat_features}"
 
         Transcript: "{transcript}"
 
@@ -44,7 +40,7 @@ def detect_relevant_feature(transcript: str) -> int:
         - If the query is asking about medical myths, false information, or fact-checking medical claims, return 6
         - For all other general medical questions, health concerns, symptoms, or medical advice, return 0
 
-        Return ONLY the number (0, 1, 3, 4, 5, or 6) as your response, nothing else.
+        Return ONLY the number (0, 1, 3, 4, 5, 6, or 7) as your response, nothing else.
         """
 
         response = model.generate_content(prompt)

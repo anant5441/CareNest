@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useState, useMemo} from 'react';
 import {Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import BackgoundWrapper from "../../Components/BackgoundWrapper";
 import Loader from "../../Components/MealLoading";
@@ -31,6 +31,160 @@ const generateMealPlan = async (formData) => {
     }
 };
 
+// Optimized Others Input Component - Memoized and isolated
+const OthersInput = React.memo(({ questionKey, placeholder, value, onChangeText, autoFocus = true }) => {
+    return (
+        <TextInput
+            style={styles.otherInput}
+            placeholder={placeholder}
+            value={value}
+            onChangeText={onChangeText}
+            placeholderTextColor="#999"
+            multiline={true}
+            numberOfLines={2}
+            autoFocus={autoFocus}
+            blurOnSubmit={false}
+        />
+    );
+});
+
+// Option Button Component - Memoized to prevent unnecessary re-renders
+const OptionButton = React.memo(({ option, isSelected, onPress }) => (
+    <TouchableOpacity
+        style={[
+            styles.optionButton,
+            isSelected && styles.selectedOption
+        ]}
+        onPress={onPress}
+    >
+        <Text style={[
+            styles.optionText,
+            isSelected && styles.selectedOptionText
+        ]}>
+            {option}
+        </Text>
+    </TouchableOpacity>
+));
+
+// Age Input Field Component - Memoized for better performance
+const AgeInputField = React.memo(({ placeholder, value, onChangeText }) => (
+    <View style={styles.inputContainer}>
+        <TextInput
+            style={styles.ageInput}
+            placeholder={placeholder}
+            value={value}
+            onChangeText={onChangeText}
+            keyboardType="numeric"
+            placeholderTextColor="#999"
+        />
+    </View>
+));
+
+// Progress Bar Component - Memoized
+const ProgressBar = React.memo(({ progress }) => (
+    <View style={styles.progressContainer}>
+        <View style={[styles.progressBar, { width: `${progress}%` }]} />
+    </View>
+));
+
+// Question Counter Component - Memoized
+const QuestionCounter = React.memo(({ current, total }) => (
+    <Text style={styles.questionCounter}>
+        {current} of {total}
+    </Text>
+));
+
+// Navigation Buttons Component - Memoized
+const NavigationButtons = React.memo(({
+                                          currentStep,
+                                          totalSteps,
+                                          isValid,
+                                          onBack,
+                                          onNext,
+                                          onSubmit
+                                      }) => (
+    <View style={styles.navigationContainer}>
+        {currentStep > 0 && (
+            <TouchableOpacity
+                style={styles.backBtn}
+                onPress={onBack}
+            >
+                <Text style={styles.backBtnText}>← Back</Text>
+            </TouchableOpacity>
+        )}
+
+        {currentStep < totalSteps - 1 ? (
+            <TouchableOpacity
+                style={[
+                    styles.nextButton,
+                    !isValid && styles.disabledButton
+                ]}
+                onPress={onNext}
+                disabled={!isValid}
+            >
+                <Text style={[
+                    styles.nextButtonText,
+                    !isValid && styles.disabledButtonText
+                ]}>
+                    Next →
+                </Text>
+            </TouchableOpacity>
+        ) : (
+            isValid && (
+                <TouchableOpacity style={styles.generateButton} onPress={onSubmit}>
+                    <Text style={styles.generateButtonText}>🎯 Generate</Text>
+                </TouchableOpacity>
+            )
+        )}
+    </View>
+));
+
+// Question Content Component - Memoized
+const QuestionContent = React.memo(({
+                                        currentQuestion,
+                                        formData,
+                                        otherInputs,
+                                        onOptionSelect,
+                                        onAgeInputChange,
+                                        onOtherInputChange
+                                    }) => (
+    <View style={styles.questionContainer}>
+        <Text style={styles.questionTitle}>{currentQuestion.title}</Text>
+        <Text style={styles.questionText}>{currentQuestion.question}</Text>
+
+        {currentQuestion.type === 'input' ? (
+            <AgeInputField
+                placeholder={currentQuestion.placeholder}
+                value={formData[currentQuestion.key]}
+                onChangeText={onAgeInputChange}
+            />
+        ) : (
+            <View style={styles.optionsContainer}>
+                {currentQuestion.options.map((option) => {
+                    const isSelected = formData[currentQuestion.key] === option;
+                    return (
+                        <OptionButton
+                            key={option} // Use option as key instead of index
+                            option={option}
+                            isSelected={isSelected}
+                            onPress={() => onOptionSelect(option)}
+                        />
+                    );
+                })}
+
+                {formData[currentQuestion.key] === 'Others Specify' && (
+                    <OthersInput
+                        questionKey={currentQuestion.key}
+                        placeholder={`Specify your ${currentQuestion.title.toLowerCase().replace(/[^\w\s]/gi, '').trim()}...`}
+                        value={otherInputs[currentQuestion.key] || ''}
+                        onChangeText={onOtherInputChange}
+                    />
+                )}
+            </View>
+        )}
+    </View>
+));
+
 // Main Form Component
 const MealPlanForm = () => {
     const [currentStep, setCurrentStep] = useState(0);
@@ -49,10 +203,8 @@ const MealPlanForm = () => {
         cultural_preference: ''
     });
 
-    // Use refs to prevent re-renders affecting TextInput focus
-    const otherInputRefs = useRef({});
-
-    const questions = [
+    // Memoize questions array to prevent recreation on every render
+    const questions = useMemo(() => [
         {
             key: 'age',
             title: '👶 Age',
@@ -90,9 +242,10 @@ const MealPlanForm = () => {
             question: 'Any medical conditions to consider?',
             options: ['None', 'Diabetes', 'Hypertension', 'Digestive Issues', 'Others Specify']
         }
-    ];
+    ], []);
 
-    const handleOptionSelect = (value) => {
+    // Memoized handlers to prevent recreation on every render
+    const handleOptionSelect = useCallback((value) => {
         const currentKey = questions[currentStep].key;
         setFormData(prev => ({
             ...prev,
@@ -106,21 +259,15 @@ const MealPlanForm = () => {
                 [currentKey]: ''
             }));
         }
-    };
+    }, [currentStep, questions]);
 
-    // Use useCallback to prevent function recreation on every render
     const handleOtherInputChange = useCallback((value) => {
         const currentKey = questions[currentStep].key;
-
-        // Update other inputs state
-        setOtherInputs(prev => {
-            const newState = {
-                ...prev,
-                [currentKey]: value
-            };
-            return newState;
-        });
-    }, [currentStep]);
+        setOtherInputs(prev => ({
+            ...prev,
+            [currentKey]: value
+        }));
+    }, [currentStep, questions]);
 
     const handleAgeInputChange = useCallback((value) => {
         setFormData(prev => ({
@@ -129,13 +276,17 @@ const MealPlanForm = () => {
         }));
     }, []);
 
-    const handleNext = () => {
+    const handleNext = useCallback(() => {
         if (currentStep < questions.length - 1) {
             setCurrentStep(currentStep + 1);
         }
-    };
+    }, [currentStep, questions.length]);
 
-    const handleSubmit = async () => {
+    const handleBack = useCallback(() => {
+        setCurrentStep(currentStep - 1);
+    }, [currentStep]);
+
+    const handleSubmit = useCallback(async () => {
         // Process form data, replacing "Others Specify" with actual input values
         const processedFormData = { ...formData };
 
@@ -161,13 +312,12 @@ const MealPlanForm = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [formData, otherInputs]);
 
-    const resetForm = () => {
+    const resetForm = useCallback(() => {
         setCurrentStep(0);
         setResult(null);
         setOtherInputs({});
-        otherInputRefs.current = {};
         setFormData({
             meal_duration: '',
             age: '',
@@ -179,10 +329,10 @@ const MealPlanForm = () => {
             medical_conditions: '',
             cultural_preference: ''
         });
-    };
+    }, []);
 
-    // Memoize the validation function to prevent unnecessary re-calculations
-    const isCurrentStepValid = React.useMemo(() => {
+    // Memoized validation logic
+    const isCurrentStepValid = useMemo(() => {
         const currentQuestion = questions[currentStep];
         const currentValue = formData[currentQuestion.key];
 
@@ -201,30 +351,13 @@ const MealPlanForm = () => {
 
             return true;
         }
-    }, [currentStep, formData, otherInputs]);
+    }, [currentStep, formData, otherInputs, questions]);
 
-    // Create a separate component for the "Others" input to prevent re-renders
-    const OthersInput = React.memo(({ questionKey, placeholder, value, onChangeText }) => {
-        return (
-            <TextInput
-                ref={ref => {
-                    if (ref) {
-                        otherInputRefs.current[questionKey] = ref;
-                    }
-                }}
-                style={styles.otherInput}
-                placeholder={placeholder}
-                value={value}
-                onChangeText={onChangeText}
-                placeholderTextColor="#999"
-                multiline={true}
-                numberOfLines={2}
-                autoFocus={true}
-                blurOnSubmit={false}
-            />
-        );
-    });
+    // Memoized current question and progress
+    const currentQuestion = useMemo(() => questions[currentStep], [questions, currentStep]);
+    const progress = useMemo(() => ((currentStep + 1) / questions.length) * 100, [currentStep, questions.length]);
 
+    // Early returns for different states
     if (result) {
         return <Result result={result} onBack={resetForm} />;
     }
@@ -233,110 +366,31 @@ const MealPlanForm = () => {
         return <Loader />;
     }
 
-    const currentQuestion = questions[currentStep];
-    const progress = ((currentStep + 1) / questions.length) * 100;
-    const isValid = isCurrentStepValid;
-
     return (
         <BackgoundWrapper>
             <View style={styles.container}>
-                {/* Progress Bar */}
-                <View style={styles.progressContainer}>
-                    <View style={[styles.progressBar, { width: `${progress}%` }]} />
-                </View>
-
-                {/* Question Counter */}
-                <Text style={styles.questionCounter}>
-                    {currentStep + 1} of {questions.length}
-                </Text>
+                <ProgressBar progress={progress} />
+                <QuestionCounter current={currentStep + 1} total={questions.length} />
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <View style={styles.questionContainer}>
-                        <Text style={styles.questionTitle}>{currentQuestion.title}</Text>
-                        <Text style={styles.questionText}>{currentQuestion.question}</Text>
-
-                        {currentQuestion.type === 'input' ? (
-                            // Age Input Field
-                            <View style={styles.inputContainer}>
-                                <TextInput
-                                    style={styles.ageInput}
-                                    placeholder={currentQuestion.placeholder}
-                                    value={formData[currentQuestion.key]}
-                                    onChangeText={handleAgeInputChange}
-                                    keyboardType="numeric"
-                                    placeholderTextColor="#999"
-                                />
-                            </View>
-                        ) : (
-                            // Options
-                            <View style={styles.optionsContainer}>
-                                {currentQuestion.options.map((option, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[
-                                            styles.optionButton,
-                                            formData[currentQuestion.key] === option && styles.selectedOption
-                                        ]}
-                                        onPress={() => handleOptionSelect(option)}
-                                    >
-                                        <Text style={[
-                                            styles.optionText,
-                                            formData[currentQuestion.key] === option && styles.selectedOptionText
-                                        ]}>
-                                            {option}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-
-                                {/* Others Specify Input Field */}
-                                {formData[currentQuestion.key] === 'Others Specify' && (
-                                    <OthersInput
-                                        questionKey={currentQuestion.key}
-                                        placeholder={`Specify your ${currentQuestion.title.toLowerCase().replace(/[^\w\s]/gi, '').trim()}...`}
-                                        value={otherInputs[currentQuestion.key] || ''}
-                                        onChangeText={handleOtherInputChange}
-                                    />
-                                )}
-                            </View>
-                        )}
-                    </View>
+                    <QuestionContent
+                        currentQuestion={currentQuestion}
+                        formData={formData}
+                        otherInputs={otherInputs}
+                        onOptionSelect={handleOptionSelect}
+                        onAgeInputChange={handleAgeInputChange}
+                        onOtherInputChange={handleOtherInputChange}
+                    />
                 </ScrollView>
 
-                {/* Navigation */}
-                <View style={styles.navigationContainer}>
-                    {currentStep > 0 && (
-                        <TouchableOpacity
-                            style={styles.backBtn}
-                            onPress={() => setCurrentStep(currentStep - 1)}
-                        >
-                            <Text style={styles.backBtnText}>← Back</Text>
-                        </TouchableOpacity>
-                    )}
-
-                    {currentStep < questions.length - 1 ? (
-                        <TouchableOpacity
-                            style={[
-                                styles.nextButton,
-                                !isValid && styles.disabledButton
-                            ]}
-                            onPress={handleNext}
-                            disabled={!isValid}
-                        >
-                            <Text style={[
-                                styles.nextButtonText,
-                                !isValid && styles.disabledButtonText
-                            ]}>
-                                Next →
-                            </Text>
-                        </TouchableOpacity>
-                    ) : (
-                        isValid && (
-                            <TouchableOpacity style={styles.generateButton} onPress={handleSubmit}>
-                                <Text style={styles.generateButtonText}>🎯 Generate</Text>
-                            </TouchableOpacity>
-                        )
-                    )}
-                </View>
+                <NavigationButtons
+                    currentStep={currentStep}
+                    totalSteps={questions.length}
+                    isValid={isCurrentStepValid}
+                    onBack={handleBack}
+                    onNext={handleNext}
+                    onSubmit={handleSubmit}
+                />
             </View>
         </BackgoundWrapper>
     );

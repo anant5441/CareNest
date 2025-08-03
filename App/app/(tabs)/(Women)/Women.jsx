@@ -12,7 +12,7 @@ function handleMythBuster() {
 const App = () => {
 
     const handleDietPlanner = ()=>{
-        console.log('handleDietPlanner');
+        router.push('../../stack/GenMealWomen');
     }
 
     return (
