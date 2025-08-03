@@ -7,6 +7,7 @@ meal_router = APIRouter()
 
 class Userconstraint(BaseModel):
     pregnancy_month : str
+    diet_type : str
     allergies : str
     nutrient_focus: str
     medical_condition : str

@@ -78,15 +78,3 @@ qa_chain = RetrievalQA.from_chain_type(
 from .prompts import structured_query_template
 from .prompts import user_input
 query = structured_query_template.format(**user_input)
-
-# === Final Call ===
-try:
-    response = qa_chain.invoke({ "query": query })
-    print("\n📘 FINAL RESPONSE:\n", response["result"])
-    print("\n🔗 SOURCES:\n", [doc.metadata for doc in response["source_documents"]])
-except Exception as e:
-    print(f"❌ Error during query processing: {str(e)}")
-
-
-    # function in place of final call, 
-    # function to tak
