@@ -11,7 +11,8 @@ from io import BytesIO
 import warnings
 
 # ML/AI libraries
-import whisper
+from deepgram import Deepgram
+# from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
@@ -30,142 +31,86 @@ load_dotenv()
 
 
 class SymptomAnalyzer:
-    """Core class for medical symptom analysis and RAG functionality"""
-
     def __init__(self):
         self.embedding_model = None
         self.medical_vector_store = None
         self.symptom_vector_store = None
-        self.whisper_model = None
+        self.deepgram = None
         self.llm = None
         self.qa_chain = None
         self._initialized = False
-
+        
         # Initialize all components
         self._initialize_components()
 
     def _initialize_components(self):
-        """Initialize all ML models and vector stores"""
         try:
             logger.info("Initializing SymptomAnalyzer components...")
-
-            # Initialize embedding model
             self._initialize_embeddings()
-
-            # Initialize vector stores
             self._initialize_vector_stores()
-
-            # Initialize LLM
             self._initialize_llm()
 
-            # Initialize Whisper model (loaded on demand)
-            self.whisper_model = None
+            dg_key = os.getenv("DEEPGRAM_API_KEY")
+            if not dg_key:
+                raise ValueError("DEEPGRAM_API_KEY not found in environment variables")
+            self.deepgram = Deepgram(dg_key)
 
             self._initialized = True
             logger.info("SymptomAnalyzer initialized successfully")
 
         except Exception as e:
-            logger.error(f"Failed to initialize SymptomAnalyzer: {e}")
+            logger.error(f"Initialization failed: {e}")
             raise
 
     def _initialize_embeddings(self):
-        """Initialize the embedding model"""
-        try:
-            logger.info("Loading embedding model...")
-            self.embedding_model = HuggingFaceEmbeddings(
-                model_name="all-MiniLM-L6-v2"
-            )
-            logger.info("Embedding model loaded successfully")
-        except Exception as e:
-            logger.error(f"Failed to load embedding model: {e}")
-            raise
+        logger.info("Loading embedding model...")
+        self.embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
     def _initialize_vector_stores(self):
-        """Initialize vector stores for medical and symptom databases"""
         try:
-            # Load symptom database vector store (now primary)
             symptom_db_path = "vectorstore/symptom_db_faiss"
             if os.path.exists(f"{symptom_db_path}/index.faiss"):
-                logger.info("Loading symptom database vector store...")
                 self.symptom_vector_store = FAISS.load_local(
-                    symptom_db_path,
-                    self.embedding_model,
-                    allow_dangerous_deserialization=True
+                    symptom_db_path, self.embedding_model, allow_dangerous_deserialization=True
                 )
-                logger.info("Symptom database vector store loaded successfully")
-            else:
-                logger.warning(f"Symptom database not found at {symptom_db_path}")
 
-            # Load medical database vector store (kept as backup)
             medical_db_path = "vectorstore/medical_db_faiss"
             if os.path.exists(f"{medical_db_path}/index.faiss"):
-                logger.info("Loading medical database vector store...")
                 self.medical_vector_store = FAISS.load_local(
-                    medical_db_path,
-                    self.embedding_model,
-                    allow_dangerous_deserialization=True
+                    medical_db_path, self.embedding_model, allow_dangerous_deserialization=True
                 )
-                logger.info("Medical database vector store loaded successfully")
-            else:
-                logger.warning(f"Medical database not found at {medical_db_path}")
 
         except Exception as e:
             logger.error(f"Failed to load vector stores: {e}")
             raise
 
     def _initialize_llm(self):
-        """Initialize the Groq LLM"""
-        try:
-            groq_api_key = os.getenv("GROQ_API_KEY")
-            if not groq_api_key:
-                raise ValueError("GROQ_API_KEY not found in environment variables")
+        groq_api_key = os.getenv("GROQ_API_KEY")
+        if not groq_api_key:
+            raise ValueError("GROQ_API_KEY not found")
 
-            logger.info("Initializing Groq LLM...")
-            self.llm = ChatGroq(
-                model_name="meta-llama/llama-4-scout-17b-16e-instruct",
-                api_key=groq_api_key,
-                temperature=0.3,
+        self.llm = ChatGroq(
+            model_name="meta-llama/llama-4-scout-17b-16e-instruct",
+            api_key=groq_api_key,
+            temperature=0.3
+        )
+
+        db = self.symptom_vector_store or self.medical_vector_store
+        if db:
+            retriever = MultiQueryRetriever.from_llm(
+                retriever=db.as_retriever(search_type="similarity", search_kwargs={"k": 3}),
+                llm=self.llm
+            )
+            prompt = self._create_medical_qa_prompt()
+            self.qa_chain = RetrievalQA.from_chain_type(
+                llm=self.llm,
+                retriever=retriever,
+                chain_type="stuff",
+                return_source_documents=True,
+                chain_type_kwargs={'prompt': prompt}
             )
 
-            # Initialize QA chain - prioritize symptom database, fallback to medical database
-            primary_db = self.symptom_vector_store or self.medical_vector_store
-            if primary_db:
-                # Create custom prompt for medical queries
-                custom_prompt = self._create_medical_qa_prompt()
-
-                # Use MultiQueryRetriever for better results
-                try:
-                    retriever = MultiQueryRetriever.from_llm(
-                        retriever=primary_db.as_retriever(
-                            search_type="similarity",
-                            search_kwargs={"k": 3}
-                        ),
-                        llm=self.llm,
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to create MultiQueryRetriever: {e}, using basic retriever")
-                    retriever = primary_db.as_retriever(
-                        search_type="similarity",
-                        search_kwargs={"k": 3}
-                    )
-
-                self.qa_chain = RetrievalQA.from_chain_type(
-                    llm=self.llm,
-                    retriever=retriever,
-                    chain_type="stuff",
-                    return_source_documents=True,
-                    chain_type_kwargs={'prompt': custom_prompt}
-                )
-
-            db_type = "symptom" if self.symptom_vector_store else "medical" if self.medical_vector_store else "none"
-            logger.info(f"Groq LLM initialized successfully with {db_type} database")
-
-        except Exception as e:
-            logger.error(f"Failed to initialize LLM: {e}")
-            raise
-
     def _create_medical_qa_prompt(self):
-        """Create custom prompt template for medical queries"""
         template = """
         You are a medical AI assistant. Use the context below to answer medical questions accurately.
         Only answer based on the context provided. If you don't know the answer based on the context, say so.
@@ -180,100 +125,54 @@ class SymptomAnalyzer:
         return PromptTemplate(template=template, input_variables=["context", "question"])
 
     def is_initialized(self) -> bool:
-        """Check if the analyzer is properly initialized"""
         return self._initialized
 
-    def _load_whisper_model(self, model_name: str = "medium"):
-        """Load Whisper model on demand"""
-        if self.whisper_model is None:
-            logger.info(f"Loading Whisper model ({model_name})...")
-            self.whisper_model = whisper.load_model(model_name)
-            logger.info("Whisper model loaded successfully")
-        return self.whisper_model
-
-    async def transcribe_audio(self, audio_data: str, model: str = "medium") -> Tuple[str, str]:
-        """
-        Transcribe base64 encoded audio data to text
-
-        Args:
-            audio_data: Base64 encoded audio data
-            model: Whisper model size
-
-        Returns:
-            Tuple of (transcript, detected_language)
-        """
+    async def transcribe_audio(self, audio_data: str, model: str = "nova") -> Tuple[str, str]:
         try:
-            # Decode base64 audio data
+            if not self.deepgram:
+                raise RuntimeError("Deepgram not initialized")
+
             audio_bytes = base64.b64decode(audio_data)
+            response = await self.deepgram.transcription.prerecorded(
+                {
+                    "buffer": BytesIO(audio_bytes),
+                    "mimetype": "audio/mp3"
+                },
+                {
+                    "model": model,
+                    "punctuate": True,
+                    "language": "en"
+                }
+            )
 
-            # Create temporary file
-            with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_file:
-                temp_file.write(audio_bytes)
-                temp_file_path = temp_file.name
+            transcript = response["results"]["channels"][0]["alternatives"][0]["transcript"]
+            if not transcript.strip():
+                raise ValueError("No meaningful speech detected")
 
-            try:
-                # Load Whisper model
-                whisper_model = self._load_whisper_model(model)
-
-                # Transcribe audio
-                logger.info("Starting transcription...")
-                result = whisper_model.transcribe(temp_file_path, task="transcribe")
-
-                transcript = result["text"].strip()
-                language = result.get("language", "unknown")
-
-                logger.info(f"Transcription completed. Language: {language}")
-
-                if not transcript or len(transcript.strip()) < 3:
-                    raise ValueError("No meaningful speech detected")
-
-                return transcript, language
-
-            finally:
-                # Clean up temporary file
-                os.unlink(temp_file_path)
+            return transcript.strip(), "en"
 
         except Exception as e:
-            logger.error(f"Audio transcription failed: {e}")
+            logger.error(f"Deepgram transcription failed: {e}")
             raise
 
-    async def analyze_symptoms(self, transcript: str, patient_age_group: str = "newborn") -> Dict[str, Any]:
-        """
-        Analyze symptoms from transcript using structured prompt
-
-        Args:
-            transcript: Patient's symptom description
-            patient_age_group: Age group of patient
-
-        Returns:
-            Structured analysis results
-        """
+    async def query_knowledge_base(self, query: str, max_results: int = 3) -> Tuple[str, List[Dict[str, Any]]]:
         try:
-            # Create structured prompt based on age group
-            if patient_age_group.lower() == "newborn":
-                prompt = self._create_newborn_analysis_prompt(transcript)
-            else:
-                prompt = self._create_general_analysis_prompt(transcript, patient_age_group)
+            if not self.qa_chain:
+                raise ValueError("QA chain not initialized")
 
-            # Get analysis from LLM
-            logger.info("Generating symptom analysis...")
-
-            if self.qa_chain:
-                # Use RAG for better medical context
-                result = self.qa_chain.invoke({"query": prompt})
-                analysis_text = result["result"]
-            else:
-                # Direct LLM query
-                analysis_text = await self._direct_llm_query(prompt)
-
-            # Parse structured response
-            parsed_analysis = self._parse_analysis_response(analysis_text)
-
-            logger.info("Symptom analysis completed")
-            return parsed_analysis
+            result = self.qa_chain.invoke({"query": query})
+            answer = result["result"]
+            source_docs = []
+            for doc in result.get("source_documents", [])[:max_results]:
+                source_docs.append({
+                    "source": doc.metadata.get("source", "Unknown"),
+                    "content": doc.page_content[:200],
+                    "metadata": doc.metadata
+                })
+            return answer, source_docs
 
         except Exception as e:
-            logger.error(f"Symptom analysis failed: {e}")
+            logger.error(f"RAG query failed: {e}")
             raise
 
     def _create_newborn_analysis_prompt(self, transcript: str) -> str:
@@ -417,44 +316,6 @@ Be medically cautious and focus on appropriate triage.
                 "friendly_summary": "Please consult with a healthcare provider for proper assessment."
             }
 
-    async def query_knowledge_base(self, query: str, max_results: int = 3) -> Tuple[str, List[Dict[str, Any]]]:
-        """
-        Query the symptom knowledge base using RAG
-
-        Args:
-            query: User's medical query
-            max_results: Maximum number of source documents to return
-
-        Returns:
-            Tuple of (answer, source_documents)
-        """
-        try:
-            if not self.qa_chain:
-                raise ValueError("QA chain not initialized - symptom database may not be available")
-
-            logger.info(f"Processing RAG query: {query[:100]}...")
-
-            # Run the query through RAG chain
-            result = self.qa_chain.invoke({"query": query})
-
-            answer = result["result"]
-            source_docs = []
-
-            # Process source documents
-            for doc in result.get("source_documents", [])[:max_results]:
-                source_docs.append({
-                    "source": doc.metadata.get("source", "Unknown"),
-                    "content": doc.page_content[:200],  # Limit content length
-                    "metadata": doc.metadata
-                })
-
-            logger.info("RAG query completed successfully")
-            return answer, source_docs
-
-        except Exception as e:
-            logger.error(f"RAG query failed: {e}")
-            raise
-
     async def direct_llm_query(self, query: str) -> str:
         """
         Direct query to LLM without RAG
@@ -488,6 +349,28 @@ Response:"""
         except Exception as e:
             logger.error(f"Direct LLM query failed: {e}")
             raise
+
+    async def analyze_voice_input(self, audio_base64: str, age_group: str = "newborn") -> Dict[str, Any]:
+        """
+        Full flow: base64 audio -> transcription -> LLM triage -> parsed result
+        """
+        try:
+            transcript, lang = await self.transcribe_audio(audio_base64)
+
+            if age_group.lower() == "newborn":
+                prompt = self._create_newborn_analysis_prompt(transcript)
+            else:
+                prompt = self._create_general_analysis_prompt(transcript, age_group)
+
+            response = await self._direct_llm_query(prompt)
+            return self._parse_analysis_response(response)
+
+        except Exception as e:
+            logger.error(f"Full symptom analysis failed: {e}")
+            return {
+                "error": "Symptom analysis failed. Please try again or contact support."
+            }
+
 
     async def _direct_llm_query(self, prompt: str) -> str:
         """Internal method for direct LLM queries"""
