@@ -186,3 +186,39 @@ async def get_status():
         "deepgram_configured": os.getenv("DEEPGRAM_API_KEY") is not None,
         "embedding_model": "all-MiniLM-L6-v2"
     }
+
+
+@router.get("/debug/deepgram")
+async def debug_deepgram():
+    """Debug Deepgram integration"""
+    try:
+        # Test Deepgram connection
+        status_info = symptom_analyzer.get_deepgram_status()
+        connection_test = await symptom_analyzer.test_deepgram_connection()
+        
+        return {
+            "deepgram_status": status_info,
+            "connection_test": "success" if connection_test else "failed",
+            "api_key_env_set": "DEEPGRAM_API_KEY" in os.environ,
+            "api_key_value": f"{os.getenv('DEEPGRAM_API_KEY')[:10]}..." if os.getenv('DEEPGRAM_API_KEY') else None
+        }
+        
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@router.get("/debug/analyzer")
+async def debug_analyzer():
+    """Debug analyzer status"""
+    try:
+        return {
+            "analyzer_initialized": symptom_analyzer.is_initialized(),
+            "vector_stores_loaded": {
+                "symptom": symptom_analyzer.symptom_vector_store is not None,
+                "medical": symptom_analyzer.medical_vector_store is not None
+            },
+            "llm_initialized": symptom_analyzer.llm is not None,
+            "qa_chain_initialized": symptom_analyzer.qa_chain is not None
+        }
+    except Exception as e:
+        return {"error": str(e)}
