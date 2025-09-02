@@ -74,7 +74,7 @@ const App = () => {
     }
 
     const handleSymptomAnalyzer = () => {
-        Alert.alert('Symptom Analyzer', 'Under Development!');
+        router.push('../../stack/Symptom');
     }
 
     const handleMilestoneTracker = () => {

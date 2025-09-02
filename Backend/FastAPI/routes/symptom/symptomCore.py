@@ -38,7 +38,8 @@ class SymptomAnalyzer:
         self.llm = None
         self.qa_chain = None
         self._initialized = False
-        
+        self._initialization_errors = []
+
         # Initialize all components
         self._initialize_components()
 
@@ -51,20 +52,36 @@ class SymptomAnalyzer:
 
             self.deepgram_api_key = os.getenv("DEEPGRAM_API_KEY")
             if not self.deepgram_api_key:
-                raise ValueError("DEEPGRAM_API_KEY not found in environment variables")
+                error_msg = "DEEPGRAM_API_KEY not found in environment variables"
+                logger.error(error_msg)
+                self._initialization_errors.append(error_msg)
+                # Don't raise here, continue with partial initialization
 
             self._initialized = True
             logger.info("SymptomAnalyzer initialized successfully")
 
         except Exception as e:
-            logger.error(f"Initialization failed: {e}")
-            raise
+            error_msg = f"Initialization failed: {e}"
+            logger.error(error_msg)
+            self._initialization_errors.append(error_msg)
+            # Set partial initialization
+            self._initialized = False
+            # Don't raise, allow partial functionality
 
     def _initialize_embeddings(self):
-        logger.info("Loading embedding model...")
-        self.embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        try:
+            logger.info("Loading embedding model...")
+            self.embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+            logger.info("✅ Embedding model loaded successfully")
+        except Exception as e:
+            error_msg = f"Failed to initialize embeddings: {e}"
+            logger.error(error_msg)
+            self._initialization_errors.append(error_msg)
+            raise
 
     def _initialize_vector_stores(self):
+        vector_store_loaded = False
+
         try:
             symptom_db_path = "vectorstore/symptom_db_faiss"
             if os.path.exists(f"{symptom_db_path}/index.faiss"):
@@ -72,45 +89,84 @@ class SymptomAnalyzer:
                     symptom_db_path, self.embedding_model, allow_dangerous_deserialization=True
                 )
                 logger.info("✅ Symptom vector store loaded successfully")
+                vector_store_loaded = True
+            else:
+                logger.warning(f"Symptom vector store not found at {symptom_db_path}")
 
+        except Exception as e:
+            error_msg = f"Failed to load symptom vector store: {e}"
+            logger.error(error_msg)
+            self._initialization_errors.append(error_msg)
+
+        try:
             medical_db_path = "vectorstore/medical_db_faiss"
             if os.path.exists(f"{medical_db_path}/index.faiss"):
                 self.medical_vector_store = FAISS.load_local(
                     medical_db_path, self.embedding_model, allow_dangerous_deserialization=True
                 )
                 logger.info("✅ Medical vector store loaded successfully")
+                vector_store_loaded = True
+            else:
+                logger.warning(f"Medical vector store not found at {medical_db_path}")
 
         except Exception as e:
-            logger.error(f"Failed to load vector stores: {e}")
-            raise
+            error_msg = f"Failed to load medical vector store: {e}"
+            logger.error(error_msg)
+            self._initialization_errors.append(error_msg)
+
+        if not vector_store_loaded:
+            error_msg = "No vector stores could be loaded. RAG functionality will not be available."
+            logger.error(error_msg)
+            self._initialization_errors.append(error_msg)
 
     def _initialize_llm(self):
-        groq_api_key = os.getenv("GROQ_API_KEY")
-        if not groq_api_key:
-            raise ValueError("GROQ_API_KEY not found")
+        try:
+            groq_api_key = os.getenv("GROQ_API_KEY")
+            if not groq_api_key:
+                error_msg = "GROQ_API_KEY not found in environment variables"
+                logger.error(error_msg)
+                self._initialization_errors.append(error_msg)
+                raise ValueError(error_msg)
 
-        self.llm = ChatGroq(
-            model_name="meta-llama/llama-4-scout-17b-16e-instruct",
-            api_key=groq_api_key,
-            temperature=0.3
-        )
-        logger.info("✅ Groq LLM initialized successfully")
+            self.llm = ChatGroq(
+                model_name="meta-llama/llama-4-scout-17b-16e-instruct",
+                api_key=groq_api_key,
+                temperature=0.3
+            )
+            logger.info("✅ Groq LLM initialized successfully")
 
-        db = self.symptom_vector_store or self.medical_vector_store
-        if db:
-            retriever = MultiQueryRetriever.from_llm(
-                retriever=db.as_retriever(search_type="similarity", search_kwargs={"k": 3}),
-                llm=self.llm
-            )
-            prompt = self._create_medical_qa_prompt()
-            self.qa_chain = RetrievalQA.from_chain_type(
-                llm=self.llm,
-                retriever=retriever,
-                chain_type="stuff",
-                return_source_documents=True,
-                chain_type_kwargs={'prompt': prompt}
-            )
-            logger.info("✅ QA chain initialized successfully")
+            # Only initialize QA chain if we have at least one vector store
+            db = self.symptom_vector_store or self.medical_vector_store
+            if db and self.llm:
+                try:
+                    retriever = MultiQueryRetriever.from_llm(
+                        retriever=db.as_retriever(search_type="similarity", search_kwargs={"k": 3}),
+                        llm=self.llm
+                    )
+                    prompt = self._create_medical_qa_prompt()
+                    self.qa_chain = RetrievalQA.from_chain_type(
+                        llm=self.llm,
+                        retriever=retriever,
+                        chain_type="stuff",
+                        return_source_documents=True,
+                        chain_type_kwargs={'prompt': prompt}
+                    )
+                    logger.info("✅ QA chain initialized successfully")
+                except Exception as e:
+                    error_msg = f"Failed to initialize QA chain: {e}"
+                    logger.error(error_msg)
+                    self._initialization_errors.append(error_msg)
+                    # Continue without QA chain
+            else:
+                error_msg = "Cannot initialize QA chain: missing vector store or LLM"
+                logger.warning(error_msg)
+                self._initialization_errors.append(error_msg)
+
+        except Exception as e:
+            error_msg = f"Failed to initialize LLM: {e}"
+            logger.error(error_msg)
+            self._initialization_errors.append(error_msg)
+            raise
 
     def _create_medical_qa_prompt(self):
         template = """
@@ -127,12 +183,21 @@ class SymptomAnalyzer:
         return PromptTemplate(template=template, input_variables=["context", "question"])
 
     def is_initialized(self) -> bool:
-        return self._initialized
+        return self._initialized and self.llm is not None
+
+    def is_rag_available(self) -> bool:
+        """Check if RAG functionality is available"""
+        return self.qa_chain is not None and (
+                    self.symptom_vector_store is not None or self.medical_vector_store is not None)
+
+    def get_initialization_errors(self) -> List[str]:
+        """Get list of initialization errors"""
+        return self._initialization_errors.copy()
 
     async def transcribe_audio(self, audio_data: str, model: str = "nova") -> Tuple[str, str]:
         try:
             logger.info("Starting Deepgram transcription...")
-            
+
             if not self.deepgram_api_key:
                 logger.error("Deepgram API key not initialized")
                 raise RuntimeError("Deepgram API key not initialized")
@@ -140,84 +205,85 @@ class SymptomAnalyzer:
             # Decode base64 audio data
             audio_bytes = base64.b64decode(audio_data)
             logger.info(f"Audio data decoded: {len(audio_bytes)} bytes")
-            
-            # Prepare Deepgram API request
+
+            # DEBUG: Save audio to file for testing
+            import tempfile
+            import wave
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
+                tmp_file.write(audio_bytes)
+                logger.info(f"DEBUG: Audio saved to {tmp_file.name} for testing")
+                # You can manually check this file to verify it contains actual audio
+
+            # Prepare Deepgram API request with more specific parameters
             url = "https://api.deepgram.com/v1/listen"
             headers = {
                 "Authorization": f"Token {self.deepgram_api_key}",
-                "Content-Type": "audio/*"
+                "Content-Type": "audio/wav"  # Specify exact content type
             }
-            
+
+            # Add query parameters for better detection
+            params = {
+                "model": model,
+                "punctuate": "true",
+                "language": "en",
+                "encoding": "linear16",  # Adjust based on your audio format
+                "sample_rate": "16000"  # Adjust based on your audio sample rate
+            }
+
             logger.info("Making request to Deepgram API...")
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
-                None, 
-                lambda: requests.post(url, headers=headers, data=audio_bytes, timeout=30)
+                None,
+                lambda: requests.post(url, headers=headers, data=audio_bytes, params=params, timeout=30)
             )
 
             logger.info(f"Deepgram response status: {response.status_code}")
-            
+
             if response.status_code != 200:
                 error_msg = f"Deepgram API failed with status {response.status_code}: {response.text}"
                 logger.error(error_msg)
                 raise Exception(error_msg)
 
             result = response.json()
-            transcript = result["results"]["channels"][0]["alternatives"][0]["transcript"]
-            
-            if not transcript.strip():
-                logger.warning("No meaningful speech detected in audio")
-                raise ValueError("No meaningful speech detected")
 
-            logger.info(f"Transcription successful: '{transcript[:50]}...'")
-            return transcript.strip(), "en"
+            # DEBUG: Log the full response structure
+            logger.info(f"DEBUG: Full Deepgram response: {json.dumps(result, indent=2)}")
 
-        except Exception as e:
-            logger.error(f"Deepgram transcription failed: {e}")
-            raise
+            # Check if transcript exists and has content
+            if "results" in result and "channels" in result["results"]:
+                channels = result["results"]["channels"]
+                if channels and len(channels) > 0:
+                    alternatives = channels[0].get("alternatives", [])
+                    if alternatives and len(alternatives) > 0:
+                        transcript = alternatives[0].get("transcript", "")
+                        confidence = alternatives[0].get("confidence", 0)
+                        logger.info(f"Transcript confidence: {confidence}")
 
-    async def transcribe_audio_file(self, audio_file) -> Tuple[str, str]:
-        """Alternative method for file uploads"""
-        try:
-            if not self.deepgram_api_key:
-                raise RuntimeError("Deepgram API key not initialized")
+                        if transcript and transcript.strip():
+                            logger.info(f"Transcription successful: '{transcript[:50]}...'")
+                            return transcript.strip(), "en"
 
-            # Read file content
-            audio_content = await audio_file.read()
-            
-            # Prepare Deepgram API request
-            url = "https://api.deepgram.com/v1/listen"
-            headers = {
-                "Authorization": f"Token {self.deepgram_api_key}",
-                "Content-Type": "audio/*"
-            }
-            
-            # Make synchronous request using aiohttp or run in executor
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None, 
-                lambda: requests.post(url, headers=headers, data=audio_content, timeout=30)
-            )
+            # If we get here, no transcript was found
+            logger.warning(
+                "No speech detected in audio. Possible issues: silent audio, wrong format, or too much background noise")
 
-            if response.status_code != 200:
-                raise Exception(f"Deepgram API failed with status {response.status_code}: {response.text}")
+            # Return a more helpful error message
+            raise ValueError(
+                "No speech detected. Please ensure: 1) Microphone is working, 2) You're speaking clearly, 3) Audio is not muted")
 
-            result = response.json()
-            transcript = result["results"]["channels"][0]["alternatives"][0]["transcript"]
-            
-            if not transcript.strip():
-                raise ValueError("No meaningful speech detected")
-
-            return transcript.strip(), "en"
-
+        except ValueError:
+            raise  # Re-raise ValueError with our custom message
         except Exception as e:
             logger.error(f"Deepgram transcription failed: {e}")
             raise
 
     async def query_knowledge_base(self, query: str, max_results: int = 3) -> Tuple[str, List[Dict[str, Any]]]:
         try:
-            if not self.qa_chain:
-                raise ValueError("QA chain not initialized")
+            if not self.is_rag_available():
+                # Fallback to direct LLM query
+                logger.warning("RAG not available, falling back to direct LLM query")
+                answer = await self.direct_llm_query(query)
+                return answer, []
 
             result = self.qa_chain.invoke({"query": query})
             answer = result["result"]
@@ -232,6 +298,57 @@ class SymptomAnalyzer:
 
         except Exception as e:
             logger.error(f"RAG query failed: {e}")
+            # Fallback to direct LLM query
+            if self.llm:
+                logger.info("Falling back to direct LLM query")
+                answer = await self.direct_llm_query(query)
+                return answer, []
+            else:
+                raise Exception("Both RAG and direct LLM queries are unavailable")
+
+    async def direct_llm_query(self, query: str) -> str:
+        """
+        Direct query to LLM without RAG
+        """
+        try:
+            if not self.llm:
+                raise ValueError("LLM not initialized")
+
+            logger.info("Processing direct LLM query...")
+
+            # Add medical context to the query
+            medical_prompt = f"""
+As a medical AI assistant, please provide helpful information about the following query. 
+Remember to always recommend consulting healthcare professionals for medical advice.
+
+Query: {query}
+
+Response:"""
+
+            response = await self._direct_llm_query(medical_prompt)
+
+            logger.info("Direct LLM query completed")
+            return response
+
+        except Exception as e:
+            logger.error(f"Direct LLM query failed: {e}")
+            raise
+
+    async def _direct_llm_query(self, prompt: str) -> str:
+        """Internal method for direct LLM queries"""
+        try:
+            # Since ChatGroq might not be fully async, run in executor
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(None, self.llm.invoke, prompt)
+
+            # Extract content from ChatGroq response
+            if hasattr(response, 'content'):
+                return response.content
+            else:
+                return str(response)
+
+        except Exception as e:
+            logger.error(f"LLM invocation failed: {e}")
             raise
 
     def _create_newborn_analysis_prompt(self, transcript: str) -> str:
@@ -375,40 +492,6 @@ Be medically cautious and focus on appropriate triage.
                 "friendly_summary": "Please consult with a healthcare provider for proper assessment."
             }
 
-    async def direct_llm_query(self, query: str) -> str:
-        """
-        Direct query to LLM without RAG
-
-        Args:
-            query: User's query
-
-        Returns:
-            LLM response
-        """
-        try:
-            if not self.llm:
-                raise ValueError("LLM not initialized")
-
-            logger.info("Processing direct LLM query...")
-
-            # Add medical context to the query
-            medical_prompt = f"""
-As a medical AI assistant, please provide helpful information about the following query. 
-Remember to always recommend consulting healthcare professionals for medical advice.
-
-Query: {query}
-
-Response:"""
-
-            response = await self._direct_llm_query(medical_prompt)
-
-            logger.info("Direct LLM query completed")
-            return response
-
-        except Exception as e:
-            logger.error(f"Direct LLM query failed: {e}")
-            raise
-
     async def analyze_voice_input(self, audio_base64: str, age_group: str = "newborn") -> Dict[str, Any]:
         """
         Full flow: base64 audio -> transcription -> LLM triage -> parsed result
@@ -430,24 +513,6 @@ Response:"""
                 "error": "Symptom analysis failed. Please try again or contact support."
             }
 
-
-    async def _direct_llm_query(self, prompt: str) -> str:
-        """Internal method for direct LLM queries"""
-        try:
-            # Since ChatGroq might not be fully async, run in executor
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(None, self.llm.invoke, prompt)
-
-            # Extract content from ChatGroq response
-            if hasattr(response, 'content'):
-                return response.content
-            else:
-                return str(response)
-
-        except Exception as e:
-            logger.error(f"LLM invocation failed: {e}")
-            raise
-
     # Debug methods
     def get_deepgram_status(self):
         """Get Deepgram configuration status"""
@@ -460,17 +525,36 @@ Response:"""
     async def test_deepgram_connection(self):
         """Test Deepgram connection"""
         try:
+            if not self.deepgram_api_key:
+                return False
+
             # Test with a simple API call to check connectivity
             url = "https://api.deepgram.com/v1/projects"
             headers = {"Authorization": f"Token {self.deepgram_api_key}"}
-            
+
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
-                None, 
+                None,
                 lambda: requests.get(url, headers=headers, timeout=10)
             )
-            
+
             return response.status_code == 200
         except Exception as e:
             logger.error(f"Deepgram connection test failed: {e}")
             return False
+
+    def get_status_info(self):
+        """Get detailed status information for debugging"""
+        return {
+            "initialized": self.is_initialized(),
+            "rag_available": self.is_rag_available(),
+            "components": {
+                "embedding_model": self.embedding_model is not None,
+                "symptom_vector_store": self.symptom_vector_store is not None,
+                "medical_vector_store": self.medical_vector_store is not None,
+                "llm": self.llm is not None,
+                "qa_chain": self.qa_chain is not None,
+                "deepgram_api_key": self.deepgram_api_key is not None
+            },
+            "initialization_errors": self._initialization_errors
+        }

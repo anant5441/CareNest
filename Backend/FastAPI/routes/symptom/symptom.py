@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import logging
-from symptomCore import SymptomAnalyzer
+from .symptomCore import SymptomAnalyzer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -19,6 +19,7 @@ symptom_analyzer = SymptomAnalyzer()
 class HealthCheckResponse(BaseModel):
     status: str
     message: str
+    warnings: Optional[List[str]] = None
 
 
 class AudioToAnalysisRequest(BaseModel):
@@ -49,6 +50,7 @@ class QueryResponse(BaseModel):
     answer: str
     source_documents: Optional[List[Dict[str, Any]]] = None
     success: bool
+    method_used: Optional[str] = None  # "rag" or "direct_llm"
 
 
 class RAGQueryRequest(BaseModel):
@@ -60,21 +62,36 @@ class RAGQueryResponse(BaseModel):
     answer: str
     source_documents: List[Dict[str, Any]]
     success: bool
+    method_used: Optional[str] = None  # "rag" or "direct_llm"
 
 
 @router.get("/health-check", response_model=HealthCheckResponse)
 async def health_check():
-    """Health check endpoint"""
+    """Health check endpoint with detailed status"""
     try:
+        status_info = symptom_analyzer.get_status_info()
+        errors = symptom_analyzer.get_initialization_errors()
+
         if symptom_analyzer.is_initialized():
+            warnings = []
+            if not symptom_analyzer.is_rag_available():
+                warnings.append("RAG functionality not available - vector stores not loaded")
+            if not symptom_analyzer.deepgram_api_key:
+                warnings.append("Deepgram API key not configured - audio transcription not available")
+
             return HealthCheckResponse(
                 status="healthy",
-                message="Medical analysis service is running properly with Groq LLM + Deepgram"
+                message="Medical analysis service is running with Groq LLM",
+                warnings=warnings if warnings else None
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Service is not properly initialized"
+                detail={
+                    "message": "Service is partially initialized",
+                    "errors": errors,
+                    "status": status_info
+                }
             )
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -88,12 +105,31 @@ async def health_check():
 async def audio_to_analysis(request: AudioToAnalysisRequest):
     """Full pipeline: Deepgram transcription + LLM symptom triage"""
     try:
+        if not symptom_analyzer.is_initialized():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Service not properly initialized"
+            )
+
+        if not symptom_analyzer.deepgram_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Audio transcription not available - Deepgram API key not configured"
+            )
+
         logger.info("Starting audio-to-analysis pipeline")
 
         analysis_result = await symptom_analyzer.analyze_voice_input(
             audio_base64=request.audio_data,
             age_group=request.patient_age_group
         )
+
+        # Check if analysis failed
+        if "error" in analysis_result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=analysis_result["error"]
+            )
 
         logger.info("Audio-to-analysis pipeline completed successfully")
 
@@ -110,6 +146,8 @@ async def audio_to_analysis(request: AudioToAnalysisRequest):
             success=True
         )
 
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
     except Exception as e:
         logger.error(f"Audio-to-analysis pipeline failed: {e}")
         raise HTTPException(
@@ -120,8 +158,14 @@ async def audio_to_analysis(request: AudioToAnalysisRequest):
 
 @router.post("/rag-query", response_model=RAGQueryResponse)
 async def rag_query(request: RAGQueryRequest):
-    """Query the medical knowledge base using RAG"""
+    """Query the medical knowledge base using RAG (with fallback to direct LLM)"""
     try:
+        if not symptom_analyzer.is_initialized():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Service not properly initialized"
+            )
+
         logger.info(f"Processing RAG query: {request.query}")
 
         answer, source_docs = await symptom_analyzer.query_knowledge_base(
@@ -129,17 +173,23 @@ async def rag_query(request: RAGQueryRequest):
             request.max_results
         )
 
+        # Determine which method was used
+        method_used = "rag" if symptom_analyzer.is_rag_available() else "direct_llm"
+
         return RAGQueryResponse(
             answer=answer,
             source_documents=source_docs,
-            success=True
+            success=True,
+            method_used=method_used
         )
 
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
     except Exception as e:
         logger.error(f"RAG query failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"RAG query failed: {str(e)}"
+            detail=f"Query processing failed: {str(e)}"
         )
 
 
@@ -147,9 +197,15 @@ async def rag_query(request: RAGQueryRequest):
 async def general_query(request: QueryRequest):
     """General medical question handler"""
     try:
+        if not symptom_analyzer.is_initialized():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Service not properly initialized"
+            )
+
         logger.info(f"Processing general query: {request.query}")
 
-        if request.use_rag:
+        if request.use_rag and symptom_analyzer.is_rag_available():
             answer, source_docs = await symptom_analyzer.query_knowledge_base(
                 request.query,
                 max_results=3
@@ -157,16 +213,24 @@ async def general_query(request: QueryRequest):
             return QueryResponse(
                 answer=answer,
                 source_documents=source_docs,
-                success=True
+                success=True,
+                method_used="rag"
             )
         else:
+            # Use direct LLM query
+            if request.use_rag and not symptom_analyzer.is_rag_available():
+                logger.warning("RAG requested but not available, falling back to direct LLM")
+
             answer = await symptom_analyzer.direct_llm_query(request.query)
             return QueryResponse(
                 answer=answer,
                 source_documents=None,
-                success=True
+                success=True,
+                method_used="direct_llm"
             )
 
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
     except Exception as e:
         logger.error(f"Query failed: {e}")
         raise HTTPException(
@@ -177,14 +241,30 @@ async def general_query(request: QueryRequest):
 
 @router.get("/status")
 async def get_status():
-    """Returns config + environment status"""
+    """Returns detailed config + environment status"""
+    status_info = symptom_analyzer.get_status_info()
+    errors = symptom_analyzer.get_initialization_errors()
+
     return {
         "llm_provider": "Groq",
         "llm_model": "meta-llama/llama-4-scout-17b-16e-instruct",
-        "symptom_analyzer_initialized": symptom_analyzer.is_initialized(),
-        "groq_api_configured": os.getenv("GROQ_API_KEY") is not None,
-        "deepgram_configured": os.getenv("DEEPGRAM_API_KEY") is not None,
-        "embedding_model": "all-MiniLM-L6-v2"
+        "embedding_model": "all-MiniLM-L6-v2",
+        "service_status": {
+            "initialized": status_info["initialized"],
+            "rag_available": status_info["rag_available"],
+            "components": status_info["components"],
+            "initialization_errors": errors
+        },
+        "environment": {
+            "groq_api_configured": os.getenv("GROQ_API_KEY") is not None,
+            "deepgram_configured": os.getenv("DEEPGRAM_API_KEY") is not None,
+        },
+        "vector_stores": {
+            "symptom_db_path": "vectorstore/symptom_db_faiss",
+            "medical_db_path": "vectorstore/medical_db_faiss",
+            "symptom_db_exists": os.path.exists("vectorstore/symptom_db_faiss/index.faiss"),
+            "medical_db_exists": os.path.exists("vectorstore/medical_db_faiss/index.faiss")
+        }
     }
 
 
@@ -192,33 +272,44 @@ async def get_status():
 async def debug_deepgram():
     """Debug Deepgram integration"""
     try:
+        if not symptom_analyzer.is_initialized():
+            return {"error": "Symptom analyzer not initialized"}
+
         # Test Deepgram connection
         status_info = symptom_analyzer.get_deepgram_status()
         connection_test = await symptom_analyzer.test_deepgram_connection()
-        
+
         return {
             "deepgram_status": status_info,
             "connection_test": "success" if connection_test else "failed",
             "api_key_env_set": "DEEPGRAM_API_KEY" in os.environ,
             "api_key_value": f"{os.getenv('DEEPGRAM_API_KEY')[:10]}..." if os.getenv('DEEPGRAM_API_KEY') else None
         }
-        
+
     except Exception as e:
         return {"error": str(e)}
 
 
 @router.get("/debug/analyzer")
 async def debug_analyzer():
-    """Debug analyzer status"""
+    """Debug analyzer status with detailed information"""
     try:
+        status_info = symptom_analyzer.get_status_info()
+        errors = symptom_analyzer.get_initialization_errors()
+
         return {
-            "analyzer_initialized": symptom_analyzer.is_initialized(),
-            "vector_stores_loaded": {
-                "symptom": symptom_analyzer.symptom_vector_store is not None,
-                "medical": symptom_analyzer.medical_vector_store is not None
+            "analyzer_status": status_info,
+            "initialization_errors": errors,
+            "vector_store_paths": {
+                "symptom_db": "vectorstore/symptom_db_faiss",
+                "medical_db": "vectorstore/medical_db_faiss",
+                "symptom_exists": os.path.exists("vectorstore/symptom_db_faiss/index.faiss"),
+                "medical_exists": os.path.exists("vectorstore/medical_db_faiss/index.faiss")
             },
-            "llm_initialized": symptom_analyzer.llm is not None,
-            "qa_chain_initialized": symptom_analyzer.qa_chain is not None
+            "environment_vars": {
+                "GROQ_API_KEY": "set" if os.getenv("GROQ_API_KEY") else "not set",
+                "DEEPGRAM_API_KEY": "set" if os.getenv("DEEPGRAM_API_KEY") else "not set"
+            }
         }
     except Exception as e:
         return {"error": str(e)}
