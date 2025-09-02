@@ -18,7 +18,7 @@ function Chatbot({ handleQuery: handleQueryProp }) {
     const [messages, setMessages] = useState([
         {
             id: 1,
-            text: "Hi! I'm PoshanAI. How can I help you today?",
+            text: "Welcome to CareNest. How can I help you today?",
             isBot: true,
             timestamp: new Date()
         }
@@ -156,7 +156,7 @@ function Chatbot({ handleQuery: handleQueryProp }) {
                     <CView style={[styles.typingDot, { animationDelay: '400ms' }]} />
                 </CView>
                 <Text style={[styles.messageText, styles.botText, styles.typingText]}>
-                    PoshanAI is thinking...
+                    thinking...
                 </Text>
             </Animated.View>
         </CView>

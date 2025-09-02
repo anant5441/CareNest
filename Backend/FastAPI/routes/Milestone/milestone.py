@@ -1,22 +1,14 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, APIRouter
 from pydantic import BaseModel
-from milestoneCore import run_milestone_pipeline
-from fastapi.middleware.cors import CORSMiddleware
+from .milestoneCore import run_milestone_pipeline
 
-app = FastAPI()
+milestone_router = APIRouter()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 class QueryRequest(BaseModel):
     query: str
 
-@app.post("/milestone")
+@milestone_router.post("/chat")
 def get_milestone_info(req: QueryRequest):
     result = run_milestone_pipeline(req.query)
     return result

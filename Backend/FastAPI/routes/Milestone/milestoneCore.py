@@ -82,9 +82,10 @@ def run_milestone_pipeline(query):
         return {"error": "Empty query."}
 
     embedding_model = get_embedding_model()
-
-    if os.path.exists(f"{FAISS_DIR}/index.faiss"):
-        vector_store = FAISS.load_local(FAISS_DIR, embeddings=embedding_model, allow_dangerous_deserialization=True)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    DB_FAISS_PATH = os.path.join(current_dir, "..", "..", "vectorstore", "milestone_db_faiss")
+    if os.path.exists(DB_FAISS_PATH):
+        vector_store = FAISS.load_local(DB_FAISS_PATH, embeddings=embedding_model, allow_dangerous_deserialization=True)
     else:
         documents = load_pdf(PDF_DIR)
         chunks = create_chunks(documents)

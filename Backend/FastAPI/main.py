@@ -12,6 +12,7 @@ from routes.MythBuster.MythBuster import myth_router as myth_router
 from routes.DeepGram.core import DeepGramRouter as voice_router
 from routes.meal_woman.dpcore import meal_router as meal_woman_router
 from auth.route import auth_router
+from routes.Milestone.milestone import milestone_router
 
 load_dotenv()
 
@@ -39,6 +40,7 @@ app.include_router(myth_router, prefix="/api/f5", tags=["MythBuster"])
 app.include_router(meal_woman_router, prefix="/api/f6", tags=["Meal Planning"])
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(voice_router, prefix="/api/voice", tags=["Authentication"])
+app.include_router(milestone_router, prefix="/api/milestone", tags=["Milestone"])
 
 @app.get("/", tags=["Root"])
 async def root():

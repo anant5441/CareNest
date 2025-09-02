@@ -1,4 +1,5 @@
+const IPV4= '192.168.0.119';
 const ServerConfig = {
-    BaseURL: 'http://192.168.0.112:8000',
+    BaseURL: `http://${IPV4}:8000`,
 }
 export default ServerConfig;

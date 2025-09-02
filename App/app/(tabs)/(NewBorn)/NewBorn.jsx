@@ -78,7 +78,7 @@ const App = () => {
     }
 
     const handleMilestoneTracker = () => {
-        Alert.alert('Milestone Tracker', 'Under Development!');
+        router.push('../../stack/MileStoneChat');
     }
 
     const handleNutritionAdvisor = () => {
