@@ -6,13 +6,12 @@ import base64
 import tempfile
 import json
 import re
+import requests
 from typing import Dict, List, Tuple, Any, Optional
 from io import BytesIO
 import warnings
 
 # ML/AI libraries
-from deepgram import Deepgram
-# from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
@@ -35,7 +34,7 @@ class SymptomAnalyzer:
         self.embedding_model = None
         self.medical_vector_store = None
         self.symptom_vector_store = None
-        self.deepgram = None
+        self.deepgram_api_key = None
         self.llm = None
         self.qa_chain = None
         self._initialized = False
@@ -50,10 +49,9 @@ class SymptomAnalyzer:
             self._initialize_vector_stores()
             self._initialize_llm()
 
-            dg_key = os.getenv("DEEPGRAM_API_KEY")
-            if not dg_key:
+            self.deepgram_api_key = os.getenv("DEEPGRAM_API_KEY")
+            if not self.deepgram_api_key:
                 raise ValueError("DEEPGRAM_API_KEY not found in environment variables")
-            self.deepgram = Deepgram(dg_key)
 
             self._initialized = True
             logger.info("SymptomAnalyzer initialized successfully")
@@ -73,12 +71,14 @@ class SymptomAnalyzer:
                 self.symptom_vector_store = FAISS.load_local(
                     symptom_db_path, self.embedding_model, allow_dangerous_deserialization=True
                 )
+                logger.info("✅ Symptom vector store loaded successfully")
 
             medical_db_path = "vectorstore/medical_db_faiss"
             if os.path.exists(f"{medical_db_path}/index.faiss"):
                 self.medical_vector_store = FAISS.load_local(
                     medical_db_path, self.embedding_model, allow_dangerous_deserialization=True
                 )
+                logger.info("✅ Medical vector store loaded successfully")
 
         except Exception as e:
             logger.error(f"Failed to load vector stores: {e}")
@@ -94,6 +94,7 @@ class SymptomAnalyzer:
             api_key=groq_api_key,
             temperature=0.3
         )
+        logger.info("✅ Groq LLM initialized successfully")
 
         db = self.symptom_vector_store or self.medical_vector_store
         if db:
@@ -109,6 +110,7 @@ class SymptomAnalyzer:
                 return_source_documents=True,
                 chain_type_kwargs={'prompt': prompt}
             )
+            logger.info("✅ QA chain initialized successfully")
 
     def _create_medical_qa_prompt(self):
         template = """
@@ -129,23 +131,80 @@ class SymptomAnalyzer:
 
     async def transcribe_audio(self, audio_data: str, model: str = "nova") -> Tuple[str, str]:
         try:
-            if not self.deepgram:
-                raise RuntimeError("Deepgram not initialized")
+            logger.info("Starting Deepgram transcription...")
+            
+            if not self.deepgram_api_key:
+                logger.error("Deepgram API key not initialized")
+                raise RuntimeError("Deepgram API key not initialized")
 
+            # Decode base64 audio data
             audio_bytes = base64.b64decode(audio_data)
-            response = await self.deepgram.transcription.prerecorded(
-                {
-                    "buffer": BytesIO(audio_bytes),
-                    "mimetype": "audio/mp3"
-                },
-                {
-                    "model": model,
-                    "punctuate": True,
-                    "language": "en"
-                }
+            logger.info(f"Audio data decoded: {len(audio_bytes)} bytes")
+            
+            # Prepare Deepgram API request
+            url = "https://api.deepgram.com/v1/listen"
+            headers = {
+                "Authorization": f"Token {self.deepgram_api_key}",
+                "Content-Type": "audio/*"
+            }
+            
+            logger.info("Making request to Deepgram API...")
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None, 
+                lambda: requests.post(url, headers=headers, data=audio_bytes, timeout=30)
             )
 
-            transcript = response["results"]["channels"][0]["alternatives"][0]["transcript"]
+            logger.info(f"Deepgram response status: {response.status_code}")
+            
+            if response.status_code != 200:
+                error_msg = f"Deepgram API failed with status {response.status_code}: {response.text}"
+                logger.error(error_msg)
+                raise Exception(error_msg)
+
+            result = response.json()
+            transcript = result["results"]["channels"][0]["alternatives"][0]["transcript"]
+            
+            if not transcript.strip():
+                logger.warning("No meaningful speech detected in audio")
+                raise ValueError("No meaningful speech detected")
+
+            logger.info(f"Transcription successful: '{transcript[:50]}...'")
+            return transcript.strip(), "en"
+
+        except Exception as e:
+            logger.error(f"Deepgram transcription failed: {e}")
+            raise
+
+    async def transcribe_audio_file(self, audio_file) -> Tuple[str, str]:
+        """Alternative method for file uploads"""
+        try:
+            if not self.deepgram_api_key:
+                raise RuntimeError("Deepgram API key not initialized")
+
+            # Read file content
+            audio_content = await audio_file.read()
+            
+            # Prepare Deepgram API request
+            url = "https://api.deepgram.com/v1/listen"
+            headers = {
+                "Authorization": f"Token {self.deepgram_api_key}",
+                "Content-Type": "audio/*"
+            }
+            
+            # Make synchronous request using aiohttp or run in executor
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None, 
+                lambda: requests.post(url, headers=headers, data=audio_content, timeout=30)
+            )
+
+            if response.status_code != 200:
+                raise Exception(f"Deepgram API failed with status {response.status_code}: {response.text}")
+
+            result = response.json()
+            transcript = result["results"]["channels"][0]["alternatives"][0]["transcript"]
+            
             if not transcript.strip():
                 raise ValueError("No meaningful speech detected")
 
@@ -388,3 +447,30 @@ Response:"""
         except Exception as e:
             logger.error(f"LLM invocation failed: {e}")
             raise
+
+    # Debug methods
+    def get_deepgram_status(self):
+        """Get Deepgram configuration status"""
+        return {
+            "api_key_configured": self.deepgram_api_key is not None,
+            "api_key_present": bool(os.getenv("DEEPGRAM_API_KEY")),
+            "api_key_length": len(self.deepgram_api_key) if self.deepgram_api_key else 0
+        }
+
+    async def test_deepgram_connection(self):
+        """Test Deepgram connection"""
+        try:
+            # Test with a simple API call to check connectivity
+            url = "https://api.deepgram.com/v1/projects"
+            headers = {"Authorization": f"Token {self.deepgram_api_key}"}
+            
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None, 
+                lambda: requests.get(url, headers=headers, timeout=10)
+            )
+            
+            return response.status_code == 200
+        except Exception as e:
+            logger.error(f"Deepgram connection test failed: {e}")
+            return False
