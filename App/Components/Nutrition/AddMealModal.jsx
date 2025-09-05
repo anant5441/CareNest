@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Text, StyleSheet, TouchableOpacity, Modal, TextInput, View, ScrollView, Platform} from 'react-native';
+import {Text, StyleSheet, TouchableOpacity, Modal, TextInput, View, ScrollView, Platform, ActivityIndicator} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -7,6 +7,7 @@ const AddMealModal = ({ visible, onClose, mealFormData, onFormDataChange, onAddM
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [selectedTime, setSelectedTime] = useState(new Date());
     const [isUserOverride, setIsUserOverride] = useState(false);
+    const [isAddingMeal, setIsAddingMeal] = useState(false);
 
     // Function to determine meal type based on time
     const getMealTypeFromTime = (hour) => {
@@ -19,6 +20,9 @@ const AddMealModal = ({ visible, onClose, mealFormData, onFormDataChange, onAddM
     // Initialize time when modal opens
     useEffect(() => {
         if (visible) {
+            // Reset loading state when modal opens
+            setIsAddingMeal(false);
+
             if (mealFormData.time) {
                 const [hour, minute] = mealFormData.time.split(':').map(Number);
                 const newTime = new Date();
@@ -69,6 +73,23 @@ const AddMealModal = ({ visible, onClose, mealFormData, onFormDataChange, onAddM
         }
     };
 
+    const handleAddMealPress = async () => {
+        // Prevent multiple clicks
+        if (isAddingMeal) return;
+
+        // Set loading state
+        setIsAddingMeal(true);
+
+        try {
+            // Call the parent's onAddMeal function
+            await onAddMeal();
+        } catch (error) {
+            // If there's an error, reset the loading state
+            setIsAddingMeal(false);
+        }
+        // Note: The parent will close the modal, which will reset isAddingMeal via the useEffect
+    };
+
     const formatTime = (timeString) => {
         if (!timeString) return '';
         const [hour, minute] = timeString.split(':');
@@ -109,30 +130,33 @@ const AddMealModal = ({ visible, onClose, mealFormData, onFormDataChange, onAddM
                         <TouchableOpacity
                             onPress={onClose}
                             style={styles.closeButton}
+                            disabled={isAddingMeal}
                         >
-                            <Icon name="close" size={24} color="#666" />
+                            <Icon name="close" size={24} color={isAddingMeal ? "#ccc" : "#666"} />
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
                         <Text style={styles.inputLabel}>Meal Name *</Text>
                         <TextInput
-                            style={styles.textInput}
+                            style={[styles.textInput, isAddingMeal && styles.disabledInput]}
                             placeholder="Enter meal name"
                             value={mealFormData.name}
                             onChangeText={(text) => handleFormChange('name', text)}
+                            editable={!isAddingMeal}
                         />
 
                         <Text style={styles.inputLabel}>Time *</Text>
                         <TouchableOpacity
-                            style={styles.timePickerButton}
+                            style={[styles.timePickerButton, isAddingMeal && styles.disabledInput]}
                             onPress={showTimePickerModal}
+                            disabled={isAddingMeal}
                         >
-                            <Icon name="access-time" size={20} color="#6B46C1" />
-                            <Text style={styles.timePickerButtonText}>
+                            <Icon name="access-time" size={20} color={isAddingMeal ? "#ccc" : "#6B46C1"} />
+                            <Text style={[styles.timePickerButtonText, isAddingMeal && styles.disabledText]}>
                                 {mealFormData.time ? formatTime(mealFormData.time) : 'Select time'}
                             </Text>
-                            <Icon name="keyboard-arrow-down" size={20} color="#666" />
+                            <Icon name="keyboard-arrow-down" size={20} color={isAddingMeal ? "#ccc" : "#666"} />
                         </TouchableOpacity>
 
                         <Text style={styles.inputLabel}>
@@ -148,54 +172,67 @@ const AddMealModal = ({ visible, onClose, mealFormData, onFormDataChange, onAddM
                                     style={[
                                         styles.mealTypeButton,
                                         mealFormData.meal_type === type && styles.selectedMealType,
-                                        !isUserOverride && getSuggestedMealType() === type && styles.suggestedMealType
+                                        !isUserOverride && getSuggestedMealType() === type && styles.suggestedMealType,
+                                        isAddingMeal && styles.disabledMealType
                                     ]}
                                     onPress={() => handleMealTypeChange(type)}
+                                    disabled={isAddingMeal}
                                 >
                                     <Text style={[
                                         styles.mealTypeText,
-                                        mealFormData.meal_type === type && styles.selectedMealTypeText
+                                        mealFormData.meal_type === type && styles.selectedMealTypeText,
+                                        isAddingMeal && styles.disabledText
                                     ]}>
                                         {type.charAt(0).toUpperCase() + type.slice(1)}
                                     </Text>
                                     {!isUserOverride && getSuggestedMealType() === type && (
-                                        <Icon name="auto-awesome" size={14} color="#FFA500" style={styles.suggestedIcon} />
+                                        <Icon name="auto-awesome" size={14} color={isAddingMeal ? "#ccc" : "#FFA500"} style={styles.suggestedIcon} />
                                     )}
                                 </TouchableOpacity>
                             ))}
                         </View>
                         {isUserOverride && (
                             <TouchableOpacity
-                                style={styles.resetButton}
+                                style={[styles.resetButton, isAddingMeal && styles.disabledResetButton]}
                                 onPress={() => {
                                     setIsUserOverride(false);
                                     handleFormChange('meal_type', getSuggestedMealType());
                                 }}
+                                disabled={isAddingMeal}
                             >
-                                <Icon name="refresh" size={16} color="#6B46C1" />
-                                <Text style={styles.resetButtonText}>Reset to suggested</Text>
+                                <Icon name="refresh" size={16} color={isAddingMeal ? "#ccc" : "#6B46C1"} />
+                                <Text style={[styles.resetButtonText, isAddingMeal && styles.disabledText]}>Reset to suggested</Text>
                             </TouchableOpacity>
                         )}
                     </ScrollView>
 
                     <View style={styles.modalButtons}>
                         <TouchableOpacity
-                            style={styles.cancelButton}
+                            style={[styles.cancelButton, isAddingMeal && styles.disabledCancelButton]}
                             onPress={onClose}
+                            disabled={isAddingMeal}
                         >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                            <Text style={[styles.cancelButtonText, isAddingMeal && styles.disabledText]}>Cancel</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.addButton}
-                            onPress={onAddMeal}
+                            style={[styles.addButton, isAddingMeal && styles.addButtonLoading]}
+                            onPress={handleAddMealPress}
+                            disabled={isAddingMeal}
                         >
-                            <Text style={styles.addButtonText}>Add Meal</Text>
+                            {isAddingMeal ? (
+                                <View style={styles.loadingContainer}>
+                                    <ActivityIndicator size="small" color="white" />
+                                    <Text style={styles.addButtonText}>Adding...</Text>
+                                </View>
+                            ) : (
+                                <Text style={styles.addButtonText}>Add Meal</Text>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </View>
             </View>
 
-            {showTimePicker && (
+            {showTimePicker && !isAddingMeal && (
                 <DateTimePicker
                     value={selectedTime}
                     mode="time"
@@ -206,7 +243,7 @@ const AddMealModal = ({ visible, onClose, mealFormData, onFormDataChange, onAddM
                 />
             )}
 
-            {Platform.OS === 'ios' && showTimePicker && (
+            {Platform.OS === 'ios' && showTimePicker && !isAddingMeal && (
                 <Modal
                     visible={showTimePicker}
                     animationType="slide"
@@ -313,6 +350,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         backgroundColor: '#f9f9f9',
     },
+    disabledInput: {
+        backgroundColor: '#f0f0f0',
+        opacity: 0.6,
+    },
+    disabledText: {
+        color: '#999',
+    },
     timePickerButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -352,6 +396,9 @@ const styles = StyleSheet.create({
         borderColor: '#FFA500',
         borderWidth: 2,
     },
+    disabledMealType: {
+        opacity: 0.6,
+    },
     mealTypeText: {
         fontSize: 14,
         color: '#666',
@@ -370,6 +417,9 @@ const styles = StyleSheet.create({
         marginTop: 8,
         paddingVertical: 4,
     },
+    disabledResetButton: {
+        opacity: 0.6,
+    },
     resetButtonText: {
         fontSize: 14,
         color: '#6B46C1',
@@ -385,6 +435,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f0f0',
         alignItems: 'center',
     },
+    disabledCancelButton: {
+        opacity: 0.6,
+    },
     cancelButtonText: {
         fontSize: 16,
         color: '#666',
@@ -397,10 +450,18 @@ const styles = StyleSheet.create({
         backgroundColor: '#6B46C1',
         alignItems: 'center',
     },
+    addButtonLoading: {
+        opacity: 0.8,
+    },
     addButtonText: {
         fontSize: 16,
         color: 'white',
         fontWeight: '600',
+    },
+    loadingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
 
     // Native Time Picker Styles

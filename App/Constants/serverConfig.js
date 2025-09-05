@@ -1,4 +1,4 @@
-const IPV4= '192.168.0.119';
+const IPV4= '10.92.242.145';
 const ServerConfig = {
     BaseURL: `http://${IPV4}:8000`,
 }
