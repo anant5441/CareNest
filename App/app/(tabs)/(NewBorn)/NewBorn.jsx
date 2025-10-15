@@ -112,8 +112,8 @@ const App = () => {
         },
         {
             id: 5,
-            title: 'Parental Education',
-            image: require('../../../assets/NewBorn/Education.png'),
+            title: 'Top Care',
+            image: require('../../../assets/NewBorn/Products.png'),
         }
     ];
 

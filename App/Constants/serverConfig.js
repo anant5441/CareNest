@@ -1,5 +1,5 @@
-const IPV4= '10.92.242.145';
+const IPV4= '192.168.0.100';
 const ServerConfig = {
-    BaseURL: `http://${IPV4}:8000`,
+    BaseURL: "https://nonhydraulic-dilan-preeconomical.ngrok-free.dev",
 }
 export default ServerConfig;
