@@ -31,6 +31,7 @@ To start the development server:
 
 ```bash
 npx start
+npx expo start
 # or
 yarn start
 ```
