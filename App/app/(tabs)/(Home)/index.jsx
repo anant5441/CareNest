@@ -26,8 +26,7 @@ const App = () => {
         fetchUserName()
     }, [authToken])
     return (
-        <CView style={styles.wrapper} safe={true}>
-            <Background>
+        <Background>
                 <CView style={styles.container}>
 
                     <CView style={styles.GreetingBarContainer} >
@@ -114,8 +113,7 @@ const App = () => {
                         </TouchableOpacity>
                     </CView>
                 </CView>
-            </Background>
-        </CView>
+        </Background>
     )
 }
 
